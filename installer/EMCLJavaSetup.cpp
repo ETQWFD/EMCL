@@ -4,13 +4,16 @@
 // installs silently, then informs the user and deletes itself.
 //
 // Build (Windows, MSVC x64):
-//   cl /EHsc /O2 /D_UNICODE /DUNICODE EMCLJavaSetup.cpp /link /OUT:EMCLJavaSetup.exe urlmon.lib
+//   cl /EHsc /O2 /D_UNICODE /DUNICODE EMCLJavaSetup.cpp /link /OUT:EMCLJavaSetup.exe urlmon.lib user32.lib shell32.lib
 #include <windows.h>
+#include <shellapi.h>
 #include <urlmon.h>
 #include <string>
 #include <iostream>
 
 #pragma comment(lib, "urlmon.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "shell32.lib")
 
 static const wchar_t* JRE_URL =
     L"https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse";

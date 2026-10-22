@@ -85,7 +85,7 @@ jobs:
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
-          cl /EHsc /O2 /D_UNICODE /DUNICODE installer\EMCLJavaSetup.cpp /Fe:EMCLJavaSetup.exe /link urlmon.lib
+          cl /EHsc /O2 /D_UNICODE /DUNICODE installer\EMCLJavaSetup.cpp /Fe:EMCLJavaSetup.exe /link urlmon.lib user32.lib shell32.lib
           dir EMCLJavaSetup.exe
 
       - name: Publish / update continuous Release (jar + portable zip)
