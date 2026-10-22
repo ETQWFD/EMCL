@@ -23,6 +23,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import org.jackhuang.hmcl.Metadata;
 import org.jackhuang.hmcl.theme.Themes;
+import org.jackhuang.hmcl.upgrade.EMCLUpdateHandler;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.ui.SVG;
 import org.jackhuang.hmcl.ui.WeakListenerHolder;
@@ -52,11 +53,23 @@ public final class AboutPage extends SpinnerPane {
 
         ComponentList about = new ComponentList();
         {
+            var sponsor = LineButton.createExternalLinkButton(Metadata.SPONSOR_URL);
+            sponsor.setLargeTitle(true);
+            sponsor.setLeading(FXUtils.newBuiltinImage("/assets/img/icon-title@2x.png"));
+            sponsor.setTitle(i18n("about.sponsor"));
+            sponsor.setSubtitle(i18n("about.sponsor.statement"));
+
             var launcher = LineButton.createExternalLinkButton(Metadata.PUBLISH_URL);
             launcher.setLargeTitle(true);
             launcher.setLeading(FXUtils.newBuiltinImage("/assets/img/icon.png"));
-            launcher.setTitle("Hello Minecraft! Launcher");
+            launcher.setTitle("EMCL Launcher");
             launcher.setSubtitle(Metadata.VERSION);
+
+            var etc = LineButton.createExternalLinkButton("https://github.com/ETQWFD");
+            etc.setLargeTitle(true);
+            etc.setLeading(FXUtils.newBuiltinImage("/assets/heads/Etc.png"));
+            etc.setTitle(i18n("about.etc_team"));
+            etc.setSubtitle(i18n("about.etc_team.statement"));
 
             var author = LineButton.createExternalLinkButton("https://space.bilibili.com/1445341");
             author.setLargeTitle(true);
@@ -64,7 +77,13 @@ public final class AboutPage extends SpinnerPane {
             author.setTitle("huanghongxun");
             author.setSubtitle(i18n("about.author.statement"));
 
-            about.getContent().setAll(launcher, author);
+            var checkUpdate = new LineButton();
+            checkUpdate.setLargeTitle(true);
+            checkUpdate.setTitle(i18n("about.check_update"));
+            checkUpdate.setSubtitle(i18n("about.check_update.statement"));
+            checkUpdate.setOnAction(e -> EMCLUpdateHandler.checkNowWithDialog());
+
+            about.getContent().setAll(sponsor, launcher, etc, author, checkUpdate);
         }
 
         ComponentList thanks = loadIconedTwoLineList("/assets/about/thanks.json");
@@ -83,7 +102,7 @@ public final class AboutPage extends SpinnerPane {
             claim.setTitle(i18n("about.claim"));
             claim.setSubtitle(i18n("about.claim.statement"));
 
-            var openSource = LineButton.createExternalLinkButton("https://github.com/HMCL-dev/HMCL");
+            var openSource = LineButton.createExternalLinkButton("https://github.com/ETQWFD/EMCL");
             openSource.setLargeTitle(true);
             openSource.setTitle(i18n("about.open_source"));
             openSource.setSubtitle(i18n("about.open_source.statement"));

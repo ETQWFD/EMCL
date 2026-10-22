@@ -29,6 +29,7 @@ import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.download.game.GameAssetDownloadTask;
 import org.jackhuang.hmcl.download.game.GameDownloadTask;
 import org.jackhuang.hmcl.download.game.GameLibrariesTask;
+import org.jackhuang.hmcl.fairplay.FairPlayChecker;
 import org.jackhuang.hmcl.game.*;
 import org.jackhuang.hmcl.setting.*;
 import org.jackhuang.hmcl.task.FileDownloadTask;
@@ -55,6 +56,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -361,6 +363,13 @@ public final class Instances {
         }
 
         ensureSelectedAccount(account -> {
+            // EMCL fair-play protection: static pre-launch check.
+            List<String> violations = FairPlayChecker.check(gameInstance);
+            if (!violations.isEmpty()) {
+                FairPlayChecker.showBlockDialog(violations);
+                return;
+            }
+
             LauncherHelper launcherHelper = new LauncherHelper(gameInstance, account);
             for (Consumer<LauncherHelper> injecter : injecters) {
                 injecter.accept(launcherHelper);

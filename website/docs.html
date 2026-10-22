@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用手册 - EMCL</title>
+<meta name="description" content="EMCL 使用手册：下载、安装、启动、正版登录、常见问题与免责声明。">
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.article { max-width: 820px; margin: 0 auto; }
+.article h2 { text-align: left; font-size: 24px; margin: 34px 0 10px; }
+.article h3 { color: var(--green-800); margin: 22px 0 8px; font-size: 18px; }
+.article p, .article li { font-size: 15px; color: #334033; margin-bottom: 8px; }
+.article ul, .article ol { padding-left: 22px; margin-bottom: 12px; }
+.article code { background: var(--green-100); padding: 2px 7px; border-radius: 6px; font-size: 14px; }
+.article pre { background: #10260f; color: #d9f2d9; padding: 16px; border-radius: 10px; overflow-x: auto; margin: 12px 0; font-size: 14px; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; margin: 16px 0; }
+#eula { scroll-margin-top: 80px; }
+</style>
+</head>
+<body>
+<header>
+  <nav class="container">
+    <div class="brand"><img src="img/icon.png" alt="EMCL">EMCL</div>
+    <div class="links">
+      <a href="index.html">首页</a>
+      <a href="index.html#download">下载</a>
+      <a href="docs.html">使用手册</a>
+      <a href="https://github.com/ETQWFD/EMCL/issues">Issues</a>
+      <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&amp;k=b31JnHKqph3vMmCIhk2htihvcREH2F1t&amp;authKey=U8JJu2GFgtaIvRnov%2FhH7%2Bcq08hv8JM6q5GBdGBzF1yZXYTSGSbQP9O%2FIh%2BVqby9&amp;noverify=0&amp;group_code=1121514619">QQ 群</a>
+    </div>
+  </nav>
+</header>
+
+<section class="article">
+  <div class="container">
+    <h1 style="color:var(--green-900);font-size:32px;">EMCL 使用手册</h1>
+    <p class="sub" style="text-align:left;">v1.0 · 2026</p>
+
+    <h2 id="download-install">一、下载与安装</h2>
+    <div class="box">
+      <h3>方式 A：EMCL.jar（全平台）</h3>
+      <p>需要 Java 17 或更高版本。下载后执行：</p>
+      <pre>java -jar EMCL.jar</pre>
+      <p>首次启动会自动下载所需 JavaFX 组件（仅一次）。</p>
+      <h3>方式 B：EMCL-windows-portable.zip（Windows 便携版）</h3>
+      <p>解压后双击 <code>EMCL.exe</code> 即可，自带精简 JRE，无需安装 Java。</p>
+      <h3>方式 C：EMCLJavaSetup.exe（可选引导器）</h3>
+      <p>只有 EMCL.jar 而没有 Java 时使用：静默安装 Temurin JRE 17，完成后自动清理自身。</p>
+    </div>
+
+    <h2>二、首次启动</h2>
+    <div class="box">
+      <p>首次启动会显示用户协议与免责声明，点「同意」后进入主界面。启动器仅在用户目录生成 <code>EMCL</code> 配置目录（及游戏侧 <code>.minecraft</code>），不会生成其他文件夹。</p>
+      <p>默认界面语言为简体中文，默认主题为绿色，可在「设置」中修改。</p>
+    </div>
+
+    <h2>三、下载与启动游戏</h2>
+    <div class="box">
+      <p>进入「下载」页可以按 正式 / 预览 / 远古 / 愚人节 分组浏览版本；下载源支持 Mojang 官方与 BMCLAPI 镜像，自动切换、多线程、断点续传，对 403/429 容错。</p>
+      <p>创建实例后，选择已安装的 Java（可让启动器自动下载），点击「启动游戏」即可。启动前会执行公平启动检查：检测到作弊客户端、作弊 Mod 或 <code>-javaagent</code> 等注入参数时拒绝启动，并把原因写入 <code>EMCL/FairPlayBlock.txt</code>。</p>
+    </div>
+
+    <h2>四、账号登录</h2>
+    <div class="box">
+      <p>支持微软正版账号（OAuth 完整流程）与离线账号。正版登录授权显示名为 EMCL；客户端 ID 可通过环境变量 <code>EMCL_MS_CLIENT_ID</code> 注入。</p>
+    </div>
+
+    <h2>五、更新</h2>
+    <div class="box">
+      <p>每次启动后台检查 ETQWFD/EMCL 仓库最新提交。有新版本时弹窗三选：立即更新（jar 版自动下载替换重启）、忽略此版本（不再提示）、以后再说（下次启动再提示）。EXE 版请在「关于」页或官网下载新的便携包整体替换。</p>
+    </div>
+
+    <h2>六、反馈与联系</h2>
+    <div class="box">
+      <p>反馈：<code>2416444244@qq.com</code> · 加入 QQ 群：见首页导航 · 报告问题：GitHub Issues。</p>
+      <p>服务器相关事务（充值、封禁、纠纷、退款、规则）请直接联系对应服主 / 管理组 / 支付渠道 / Microsoft·Mojang 官方支持。</p>
+    </div>
+
+    <h2 id="eula">七、用户协议与免责声明</h2>
+    <div class="box">
+      <p>EMCL 是 HMCL（Hello Minecraft! Launcher，原作者 huanghongxun）的 GPL-3.0 开源分支。本软件按 GPL-3.0 协议分发，源码随仓库提供；作者与开发者不对使用后果承担法律责任，ETC Team 亦不承担责任。</p>
+      <p>EMCL 不运营 Minecraft，也不运营任何多人服务器；未成年人充值、服务器封禁、道具纠纷、支付退款、服务器管理规则等，请分别联系对应服主 / 服务器管理组 / 支付渠道 / Microsoft·Mojang 官方支持。</p>
+      <p>当所有启动器失效时，我将作为备选——游戏不该停止运营，游戏是人类精神上的支撑柱。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>© 2026 ETC Team · EMCL by ETC Team · 上游：HMCL by huanghongxun · GPL-3.0</div>
+  </div>
+</footer>
+</body>
+</html>

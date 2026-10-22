@@ -1,5 +1,8 @@
 /*
- * Hello Minecraft! Launcher
+ * EMCL (Eternal Minecraft Launcher)
+ * Copyright (C) 2026  ETC Team <2416444244@qq.com>
+ *
+ * Forked from Hello Minecraft! Launcher (HMCL)
  * Copyright (C) 2021  huangyuhui <huanghongxun2008@126.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,19 +20,39 @@
  */
 package org.jackhuang.hmcl.ui.main;
 
+import com.jfoenix.controls.JFXButton;
+import javafx.geometry.Pos;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.jackhuang.hmcl.theme.Themes;
+import org.jackhuang.hmcl.Metadata;
+import org.jackhuang.hmcl.ui.Controllers;
+import org.jackhuang.hmcl.ui.DialogUtils;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.ui.WeakListenerHolder;
 import org.jackhuang.hmcl.ui.construct.ComponentList;
 import org.jackhuang.hmcl.ui.construct.LineButton;
+import org.jackhuang.hmcl.ui.construct.MessageDialogPane;
 import org.jackhuang.hmcl.ui.construct.SpinnerPane;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
-import org.jackhuang.hmcl.Metadata;
-
+/**
+ * EMCL contact / feedback page.
+ *
+ * <p>Provides the QQ group link, a feedback mail entry and the "report" dialog.
+ * The report dialog does not actually send anything: it reminds the user that
+ * server-side matters (underage top-ups, bans, item disputes, refunds, server
+ * rules) belong to server owners / payment channels / Microsoft-Mojang support,
+ * and that EMCL is distributed as-is under GPL-3.0.
+ */
 public class FeedbackPage extends SpinnerPane {
 
     private final WeakListenerHolder holder = new WeakListenerHolder();
@@ -50,29 +73,24 @@ public class FeedbackPage extends SpinnerPane {
             users.setTitle(i18n("contact.chat.qq_group"));
             users.setSubtitle(i18n("contact.chat.qq_group.statement"));
 
-            var discord = LineButton.createExternalLinkButton("https://discord.gg/jVvC7HfM6U");
-            discord.setLargeTitle(true);
-            discord.setLeading(FXUtils.newBuiltinImage("/assets/img/discord.png"));
-            discord.setTitle(i18n("contact.chat.discord"));
-            discord.setSubtitle(i18n("contact.chat.discord.statement"));
-
-            groups.getContent().setAll(users, discord);
+            groups.getContent().setAll(users);
         }
 
         ComponentList feedback = new ComponentList();
         {
-            var github = LineButton.createExternalLinkButton("https://github.com/HMCL-dev/HMCL/issues/new/choose");
-            github.setLargeTitle(true);
-            github.setTitle(i18n("contact.feedback.github"));
-            github.setSubtitle(i18n("contact.feedback.github.statement"));
+            var mail = LineButton.createExternalLinkButton("mailto:" + Metadata.FEEDBACK_MAIL);
+            mail.setLargeTitle(true);
+            mail.setLeading(FXUtils.newBuiltinImage("/assets/img/icon-title@2x.png"));
+            mail.setTitle(i18n("contact.feedback.mail"));
+            mail.setSubtitle(i18n("contact.feedback.mail.statement"));
 
-            holder.add(FXUtils.onWeakChangeAndOperate(Themes.darkModeProperty(), darkMode -> {
-                github.setLeading(darkMode
-                        ? FXUtils.newBuiltinImage("/assets/img/github-white.png")
-                        : FXUtils.newBuiltinImage("/assets/img/github.png"));
-            }));
+            var report = new LineButton();
+            report.setLargeTitle(true);
+            report.setTitle(i18n("contact.report"));
+            report.setSubtitle(i18n("contact.report.statement"));
+            report.setOnAction(event -> showReportDialog());
 
-            feedback.getContent().setAll(github);
+            feedback.getContent().setAll(mail, report);
         }
 
         content.getChildren().addAll(
@@ -81,5 +99,79 @@ public class FeedbackPage extends SpinnerPane {
                 ComponentList.createComponentListTitle(i18n("contact.feedback")),
                 feedback
         );
+    }
+
+    private void showReportDialog() {
+        List<String> items = List.of(
+                i18n("contact.report.item.underage_topup"),
+                i18n("contact.report.item.server_ban"),
+                i18n("contact.report.item.item_dispute"),
+                i18n("contact.report.item.payment_refund"),
+                i18n("contact.report.item.server_rules")
+        );
+
+        VBox body = new VBox(8);
+        body.setAlignment(Pos.CENTER_LEFT);
+
+        Label hint = new Label(i18n("contact.report.hint"));
+        hint.setWrapText(true);
+        body.getChildren().add(hint);
+
+        List<CheckBox> boxes = new ArrayList<>();
+        for (String item : items) {
+            CheckBox box = new CheckBox(item);
+            boxes.add(box);
+            body.getChildren().add(box);
+        }
+
+        TextField other = new TextField();
+        other.setPromptText(i18n("contact.report.other"));
+        HBox otherRow = new HBox(8, new Label(i18n("contact.report.other_label")), other);
+        HBox.setHgrow(other, Priority.ALWAYS);
+        body.getChildren().add(otherRow);
+
+        final int MAX_SELECTED = 5;
+        for (CheckBox box : boxes) {
+            box.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                if (Boolean.TRUE.equals(newVal)) {
+                    long selected = boxes.stream().filter(CheckBox::isSelected).count();
+                    if (selected > MAX_SELECTED) {
+                        box.setSelected(false);
+                    }
+                }
+            });
+        }
+
+        JFXButton ok = new JFXButton(i18n("button.ok"));
+        ok.getStyleClass().add("dialog-accept");
+
+        JFXButton cancel = new JFXButton(i18n("button.cancel"));
+        cancel.getStyleClass().add("dialog-cancel");
+
+        HBox buttons = new HBox(12, ok, cancel);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox root = new VBox(12, body, buttons);
+        root.setMinWidth(420);
+
+        ok.setOnAction(e -> {
+            DialogUtils.close(root);
+            showReportDiscourageDialog();
+        });
+        cancel.setOnAction(e -> DialogUtils.close(root));
+
+        Controllers.dialog(root);
+    }
+
+    private void showReportDiscourageDialog() {
+        String text = i18n("contact.report.discourage");
+        MessageDialogPane pane = new MessageDialogPane.Builder(text, i18n("contact.report.discourage_title"), MessageDialogPane.MessageType.WARNING).build();
+
+        JFXButton understand = new JFXButton(i18n("contact.report.understand"));
+        understand.getStyleClass().add("dialog-accept");
+        understand.setOnAction(e -> DialogUtils.close(pane));
+        pane.addButton(understand);
+
+        Controllers.dialog(pane);
     }
 }

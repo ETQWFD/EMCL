@@ -22,6 +22,7 @@ import org.jackhuang.hmcl.auth.AuthenticationException;
 import org.jackhuang.hmcl.auth.OAuth;
 import org.jackhuang.hmcl.event.Event;
 import org.jackhuang.hmcl.event.EventManager;
+import org.jackhuang.hmcl.setting.SettingsManager;
 import org.jackhuang.hmcl.theme.Themes;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.io.IOUtils;
@@ -220,8 +221,22 @@ public final class OAuthServer extends NanoHTTPD implements OAuth.Session {
 
         @Override
         public String getClientId() {
-            return System.getProperty("hmcl.microsoft.auth.id",
-                    JarUtils.getAttribute("hmcl.microsoft.auth.id", ""));
+            // EMCL: client id is injected via EMCL_MS_CLIENT_ID env var,
+            // -Demcl.microsoft.auth.id system property, the jar manifest
+            // attribute emcl.microsoft.auth.id, or the launcher setting.
+            String env = System.getenv("EMCL_MS_CLIENT_ID");
+            if (StringUtils.isNotBlank(env)) {
+                return env;
+            }
+            String prop = System.getProperty("emcl.microsoft.auth.id", "");
+            if (StringUtils.isNotBlank(prop)) {
+                return prop;
+            }
+            String attr = JarUtils.getAttribute("emcl.microsoft.auth.id", "");
+            if (StringUtils.isNotBlank(attr)) {
+                return attr;
+            }
+            return SettingsManager.settings().getSystemEMCLMsClientId();
         }
     }
 

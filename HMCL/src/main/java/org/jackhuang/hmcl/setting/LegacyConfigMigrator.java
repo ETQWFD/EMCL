@@ -88,25 +88,25 @@ public final class LegacyConfigMigrator {
     private static final String LEGACY_CONFIG_FILENAME_LINUX = ".hmcl.json";
 
     /// The legacy user settings path shared by all workspaces.
-    private static final Path LEGACY_USER_SETTINGS_LOCATION = Metadata.HMCL_USER_HOME.resolve("config.json");
+    private static final Path LEGACY_USER_SETTINGS_LOCATION = Metadata.EMCL_USER_HOME.resolve("config.json");
 
     /// The receipt recording the legacy user config migrated to the current user settings and state.
     private static final Path USER_SETTINGS_MIGRATION_RECEIPT_LOCATION =
-            Metadata.HMCL_USER_HOME.resolve("state").resolve("user-settings.migration-receipt.json");
+            Metadata.EMCL_USER_HOME.resolve("state").resolve("user-settings.migration-receipt.json");
 
     /// The legacy user account file path shared by all workspaces.
-    private static final Path LEGACY_USER_ACCOUNTS_LOCATION = Metadata.HMCL_USER_HOME.resolve("accounts.json");
+    private static final Path LEGACY_USER_ACCOUNTS_LOCATION = Metadata.EMCL_USER_HOME.resolve("accounts.json");
 
     /// Prefix used by legacy selected account strings for shared account entries.
     private static final String LEGACY_GLOBAL_ACCOUNT_PREFIX = "$GLOBAL:";
 
     /// The receipt recording the legacy shared accounts migrated to the shared account metadata.
     private static final Path USER_ACCOUNTS_MIGRATION_RECEIPT_LOCATION =
-            Metadata.HMCL_USER_HOME.resolve("state").resolve("user-accounts.migration-receipt.json");
+            Metadata.EMCL_USER_HOME.resolve("state").resolve("user-accounts.migration-receipt.json");
 
     /// The receipt recording the legacy config migrated to the current per-workspace config.
     private static final Path SETTINGS_MIGRATION_RECEIPT_LOCATION =
-            Metadata.HMCL_LOCAL_HOME.resolve("state").resolve("launcher-settings.migration-receipt.json");
+            Metadata.EMCL_LOCAL_HOME.resolve("state").resolve("launcher-settings.migration-receipt.json");
 
     /// Legacy ordinal order for `BackgroundType` in legacy settings.
     private static final String[] LEGACY_BACKGROUND_IMAGE_TYPES = {
@@ -1094,7 +1094,7 @@ public final class LegacyConfigMigrator {
     /// Finds a legacy config file with the same precedence as old HMCL versions.
     private static @Nullable Path locateLegacyConfig() {
         // Keep this order aligned with old HMCL versions so the same legacy file wins during migration.
-        Path defaultConfigFile = Metadata.HMCL_LOCAL_HOME.resolve(LEGACY_CONFIG_FILENAME);
+        Path defaultConfigFile = Metadata.EMCL_LOCAL_HOME.resolve(LEGACY_CONFIG_FILENAME);
         if (Files.isRegularFile(defaultConfigFile)) {
             return defaultConfigFile;
         }

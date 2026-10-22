@@ -77,3 +77,9 @@ language-subtag-registry
 !/.gemini/config.yaml
 .codex
 /.gradle-*/
+
+# EMCL local test / built artifacts
+/.run-test/
+/EMCL.jar
+/HMCL/build/libs/
+*.tmp

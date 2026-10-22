@@ -105,7 +105,7 @@ public final class GameDirectories extends ObservableSetting implements JsonSche
     private final ObservableList<GameDirectory> gameDirectories =
             FXCollections.observableArrayList(profile -> new Observable[] { profile });
 
-    /// Whether this store represents `HMCL_USER_HOME/config/user-game-directories.json`.
+    /// Whether this store represents `EMCL_USER_HOME/config/user-game-directories.json`.
     private transient boolean userFile;
 
     /// Returns the game directories stored in this file.
@@ -113,12 +113,12 @@ public final class GameDirectories extends ObservableSetting implements JsonSche
         return gameDirectories;
     }
 
-    /// Sets whether this store represents `HMCL_USER_HOME/config/user-game-directories.json`.
+    /// Sets whether this store represents `EMCL_USER_HOME/config/user-game-directories.json`.
     void setUserFile(boolean userFile) {
         this.userFile = userFile;
     }
 
-    /// Returns whether this store represents `HMCL_USER_HOME/config/user-game-directories.json`.
+    /// Returns whether this store represents `EMCL_USER_HOME/config/user-game-directories.json`.
     boolean isUserFile() {
         return userFile;
     }

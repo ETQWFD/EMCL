@@ -39,6 +39,7 @@ import org.jackhuang.hmcl.setting.*;
 import org.jackhuang.hmcl.task.AsyncTaskExecutor;
 import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.ui.Controllers;
+import org.jackhuang.hmcl.addon.EMCLAnnouncementChecker;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.ui.animation.AnimationUtils;
 import org.jackhuang.hmcl.upgrade.UpdateChecker;
@@ -131,7 +132,7 @@ public final class Launcher extends Application {
                 showAlert(AlertType.WARNING, i18n("fatal.config_unsupported_version"));
             }
 
-            if (Metadata.HMCL_LOCAL_HOME.toString().indexOf('=') >= 0) {
+            if (Metadata.EMCL_LOCAL_HOME.toString().indexOf('=') >= 0) {
                 showAlert(AlertType.WARNING, i18n("fatal.illegal_char"));
             }
 
@@ -144,6 +145,7 @@ public final class Launcher extends Application {
 
                 RegionUtils.init();
                 UpdateChecker.init();
+                EMCLAnnouncementChecker.init();
 
                 primaryStage.show();
             });
@@ -308,8 +310,8 @@ public final class Launcher extends Application {
             LOG.info("Java VM Version: " + System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor"));
             LOG.info("Java Home: " + System.getProperty("java.home"));
             LOG.info("Current Directory: " + Metadata.CURRENT_DIRECTORY);
-            LOG.info("HMCL User Home: " + Metadata.HMCL_USER_HOME);
-            LOG.info("HMCL Local Home: " + Metadata.HMCL_LOCAL_HOME);
+            LOG.info("HMCL User Home: " + Metadata.EMCL_USER_HOME);
+            LOG.info("HMCL Local Home: " + Metadata.EMCL_LOCAL_HOME);
             LOG.info("HMCL Jar Path: " + Objects.requireNonNullElse(JarUtils.thisJarPath(), "Not Found"));
             LOG.info("HMCL Log File: " + Objects.requireNonNullElse(LOG.getLogFile(), "In Memory"));
             LOG.info("JVM Max Memory: " + MEGABYTES.formatBytes(Runtime.getRuntime().maxMemory()));
@@ -567,8 +569,8 @@ public final class Launcher extends Application {
 
         ArrayList<String> files = new ArrayList<>();
         files.add(configDirectory.toString());
-        if (Files.exists(Metadata.HMCL_USER_HOME))
-            files.add(Metadata.HMCL_USER_HOME.toString());
+        if (Files.exists(Metadata.EMCL_USER_HOME))
+            files.add(Metadata.EMCL_USER_HOME.toString());
 
         Path mcDir = Paths.get(".minecraft").toAbsolutePath().normalize();
         if (Files.exists(mcDir))

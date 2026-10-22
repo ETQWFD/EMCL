@@ -192,6 +192,22 @@ public final class LauncherSettings extends ObservableSetting implements JsonSch
         return language;
     }
 
+    /// EMCL: Microsoft OAuth client id injected by the user/CI.
+    /// Injected via EMCL_MS_CLIENT_ID env var, -Demcl.microsoft.auth.id property,
+    /// or the jar manifest attribute emcl.microsoft.auth.id; this setting is the fallback.
+    @SerializedName("systemEMCLMsClientId")
+    private final StringProperty systemEMCLMsClientId = new SimpleStringProperty();
+
+    /// Returns the EMCL Microsoft OAuth client id setting.
+    public StringProperty systemEMCLMsClientIdProperty() {
+        return systemEMCLMsClientId;
+    }
+
+    /// Returns the configured EMCL Microsoft OAuth client id.
+    public String getSystemEMCLMsClientId() {
+        return systemEMCLMsClientId.get();
+    }
+
     /// Whether preview builds are accepted by update checks.
     @SerializedName("acceptPreviewUpdate")
     private final BooleanProperty acceptPreviewUpdate = new SimpleBooleanProperty(false);

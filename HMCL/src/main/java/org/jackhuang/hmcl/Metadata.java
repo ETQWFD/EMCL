@@ -1,5 +1,8 @@
 /*
- * Hello Minecraft! Launcher
+ * EMCL (Eternal Minecraft Launcher)
+ * Copyright (C) 2026  ETC Team <2416444244@qq.com>
+ *
+ * Forked from Hello Minecraft! Launcher (HMCL)
  * Copyright (C) 2021  huangyuhui <huanghongxun2008@126.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,17 +32,21 @@ import java.util.EnumSet;
 
 /**
  * Stores metadata about this application.
+ *
+ * <p>EMCL is a GPL-3.0 fork of HMCL. User-visible branding, directories and
+ * update channels use the "EMCL" namespace, while the code package and the
+ * game-side integration metadata (hmcl.json etc.) stay compatible with HMCL.
  */
 public final class Metadata {
     private Metadata() {
     }
 
-    public static final String NAME = "HMCL";
-    public static final String FULL_NAME = "Hello Minecraft! Launcher";
-    public static final String VERSION = System.getProperty("hmcl.version.override", JarUtils.getAttribute("hmcl.version", "@develop@"));
+    public static final String NAME = "EMCL";
+    public static final String FULL_NAME = "EMCL Launcher";
+    public static final String VERSION = System.getProperty("emcl.version.override", JarUtils.getAttribute("emcl.version", "@develop@"));
 
     /// Explicit Application User Model ID used for Windows taskbar grouping and pinning.
-    public static final String WINDOWS_APP_USER_MODEL_ID = "org.jackhuang.hmcl";
+    public static final String WINDOWS_APP_USER_MODEL_ID = "org.etc.emcl";
 
     public static final String TITLE = NAME + " " + VERSION;
     public static final String FULL_TITLE = FULL_NAME + " v" + VERSION;
@@ -48,52 +55,54 @@ public final class Metadata {
     public static final int MINIMUM_SUPPORTED_JAVA_VERSION = 17;
     public static final int RECOMMENDED_JAVA_VERSION = 21;
 
-    public static final String PUBLISH_URL = "https://hmcl.huangyuhui.net";
-    public static final String DOWNLOAD_URL = PUBLISH_URL + "/download";
-    public static final String HMCL_UPDATE_URL = System.getProperty("hmcl.update_source.override", PUBLISH_URL + "/api/update_link");
-    public static final String MANUAL_UPDATE_URL = "https://github.com/HMCL-dev/HMCL/releases";
+    public static final String PUBLISH_URL = "https://etqwfd.github.io/EMCL";
+    public static final String DOWNLOAD_URL = "https://github.com/ETQWFD/EMCL/releases/latest";
+    public static final String EMCL_UPDATE_URL = "https://github.com/ETQWFD/EMCL";
+    public static final String MANUAL_UPDATE_URL = "https://github.com/ETQWFD/EMCL/releases";
 
-    public static final String DOCS_URL = "https://docs.hmcl.net";
-    public static final String CONTACT_URL = DOCS_URL + "/help.html";
-    public static final String CHANGELOG_URL = DOCS_URL + "/changelog/";
-    public static final String EULA_URL = DOCS_URL + "/eula/hmcl.html";
-    public static final String GROUPS_URL = "https://www.bilibili.com/opus/905435541874409529";
+    public static final String DOCS_URL = "https://etqwfd.github.io/EMCL";
+    public static final String CONTACT_URL = DOCS_URL + "/docs.html";
+    public static final String CHANGELOG_URL = "https://github.com/ETQWFD/EMCL/releases";
+    public static final String EULA_URL = DOCS_URL + "/docs.html#eula";
+    public static final String GROUPS_URL = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=b31JnHKqph3vMmCIhk2htihvcREH2F1t&authKey=U8JJu2GFgtaIvRnov%2FhH7%2Bcq08hv8JM6q5GBdGBzF1yZXYTSGSbQP9O%2FIh%2BVqby9&noverify=0&group_code=1121514619";
+    public static final String SPONSOR_URL = "https://b23.tv/o42pOXH";
+    public static final String FEEDBACK_MAIL = "2416444244@qq.com";
 
-    public static final String BUILD_CHANNEL = JarUtils.getAttribute("hmcl.version.type", "nightly");
-    public static final String GITHUB_SHA = JarUtils.getAttribute("hmcl.version.hash", null);
+    public static final String BUILD_CHANNEL = JarUtils.getAttribute("emcl.version.type", "nightly");
+    public static final String GITHUB_SHA = JarUtils.getAttribute("emcl.version.hash", null);
 
     public static final Path CURRENT_DIRECTORY = Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize();
     public static final Path MINECRAFT_DIRECTORY = OperatingSystem.getWorkingDirectory("minecraft");
-    public static final Path HMCL_USER_HOME;
-    public static final Path HMCL_LOCAL_HOME;
+    public static final Path EMCL_USER_HOME;
+    public static final Path EMCL_LOCAL_HOME;
     public static final Path DEPENDENCIES_DIRECTORY;
 
     static {
-        String hmclHome = System.getProperty("hmcl.home", System.getenv("HMCL_USER_HOME"));
-        if (StringUtils.isBlank(hmclHome)) {
+        String emclHome = System.getProperty("emcl.home", System.getenv("EMCL_USER_HOME"));
+        if (StringUtils.isBlank(emclHome)) {
             if (OperatingSystem.CURRENT_OS.isLinuxOrBSD()) {
                 String xdgData = System.getenv("XDG_DATA_HOME");
                 if (StringUtils.isNotBlank(xdgData)) {
-                    HMCL_USER_HOME = Path.of(xdgData, "hmcl").toAbsolutePath().normalize();
+                    EMCL_USER_HOME = Path.of(xdgData, "EMCL").toAbsolutePath().normalize();
                 } else {
-                    HMCL_USER_HOME = Path.of(System.getProperty("user.home"), ".local", "share", "hmcl").toAbsolutePath().normalize();
+                    EMCL_USER_HOME = Path.of(System.getProperty("user.home"), ".local", "share", "EMCL").toAbsolutePath().normalize();
                 }
             } else {
-                HMCL_USER_HOME = OperatingSystem.getWorkingDirectory("hmcl");
+                EMCL_USER_HOME = OperatingSystem.getWorkingDirectory("EMCL");
             }
         } else {
-            HMCL_USER_HOME = Path.of(hmclHome).toAbsolutePath().normalize();
+            EMCL_USER_HOME = Path.of(emclHome).toAbsolutePath().normalize();
         }
 
-        String hmclCurrentDir = System.getProperty("hmcl.dir", System.getenv("HMCL_LOCAL_HOME"));
-        HMCL_LOCAL_HOME = StringUtils.isNotBlank(hmclCurrentDir)
-                ? Path.of(hmclCurrentDir).toAbsolutePath().normalize()
-                : CURRENT_DIRECTORY.resolve(".hmcl");
+        String emclCurrentDir = System.getProperty("emcl.dir", System.getenv("EMCL_LOCAL_HOME"));
+        EMCL_LOCAL_HOME = StringUtils.isNotBlank(emclCurrentDir)
+                ? Path.of(emclCurrentDir).toAbsolutePath().normalize()
+                : CURRENT_DIRECTORY.resolve(".EMCL");
 
-        String hmclDependencies = System.getProperty("hmcl.dependencies.dir", System.getenv("HMCL_DEPENDENCIES_DIR"));
-        DEPENDENCIES_DIRECTORY = StringUtils.isNotBlank(hmclDependencies)
-                ? Path.of(hmclDependencies).toAbsolutePath().normalize()
-                : HMCL_LOCAL_HOME.resolve("dependencies");
+        String emclDependencies = System.getProperty("emcl.dependencies.dir", System.getenv("EMCL_DEPENDENCIES_DIR"));
+        DEPENDENCIES_DIRECTORY = StringUtils.isNotBlank(emclDependencies)
+                ? Path.of(emclDependencies).toAbsolutePath().normalize()
+                : EMCL_LOCAL_HOME.resolve("dependencies");
     }
 
     public static boolean isStable() {
@@ -135,12 +144,12 @@ public final class Metadata {
         }
     }
 
-    /// Directory under [HMCL_LOCAL_HOME] that holds a launcher-bundled modpack for automatic install.
+    /// Directory under [EMCL_LOCAL_HOME] that holds a launcher-bundled modpack for automatic install.
     public static final String BUNDLED_MODPACK_DIRECTORY_NAME = "modpack";
 
-    /// Returns the directory for a launcher-bundled modpack (`[HMCL_LOCAL_HOME]/modpack`).
+    /// Returns the directory for a launcher-bundled modpack (`[EMCL_LOCAL_HOME]/modpack`).
     public static Path getBundledModpackDirectory() {
-        return HMCL_LOCAL_HOME.resolve(BUNDLED_MODPACK_DIRECTORY_NAME);
+        return EMCL_LOCAL_HOME.resolve(BUNDLED_MODPACK_DIRECTORY_NAME);
     }
 
     /// Returns the bundled modpack package under [getBundledModpackDirectory], if present.

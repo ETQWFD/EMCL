@@ -14,19 +14,19 @@
     "lzh": "預設主題"
   },
   "description": {
-    "default": "HMCL Default",
-    "es": "HMCL Predeterminado",
-    "ja": "HMCL デフォルト",
-    "ru": "HMCL По умолчанию",
-    "uk": "HMCL За замовчуванням",
-    "zh-Hans": "HMCL 默认主题",
-    "zh-Hant": "HMCL 預設主題",
-    "lzh": "HMCL 預設主題"
+    "default": "EMCL Default",
+    "es": "EMCL Predeterminado",
+    "ja": "EMCL デフォルト",
+    "ru": "EMCL По умолчанию",
+    "uk": "EMCL За замовчуванням",
+    "zh-Hans": "EMCL 默认主题",
+    "zh-Hant": "EMCL 預設主題",
+    "lzh": "EMCL 預設主題"
   },
   "authors": [
     {
       "name": {
-        "default": "HMCL",
+        "default": "EMCL",
         "en-Qabs": "ꞀƆWH"
       }
     }

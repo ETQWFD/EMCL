@@ -137,7 +137,7 @@ public final class ExportWizardProvider implements WizardProvider {
 
                     for (String extension : FontManager.FONT_EXTENSIONS) {
                         String fileName = "font." + extension;
-                        Path font = Metadata.HMCL_LOCAL_HOME.resolve(fileName);
+                        Path font = Metadata.EMCL_LOCAL_HOME.resolve(fileName);
                         if (!Files.isRegularFile(font))
                             font = Metadata.CURRENT_DIRECTORY.resolve(fileName);
                         if (Files.isRegularFile(font))

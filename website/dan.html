@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMCL Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  main { max-width: 860px; margin: 40px auto; padding: 0 20px; }
+  .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 22px; box-shadow: var(--shadow); }
+  .panel h2 { font-size: 19px; color: var(--green-900); margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  label { display: block; font-size: 14px; color: #334033; margin: 12px 0 4px; }
+  input[type=text], input[type=password], textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; font-family: inherit; }
+  textarea { min-height: 120px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .msg { margin-top: 12px; font-size: 14px; }
+  .ok { color: var(--green-700); }
+  .err { color: #c62828; }
+  #gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99; }
+  #gate .box { width: 300px; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="box panel" style="text-align:center;">
+    <h2>EMCL Admin</h2>
+    <label>口令</label>
+    <input type="password" id="pw" autofocus>
+    <p class="msg err" id="pwmsg"></p>
+    <div class="row" style="justify-content:center;margin-top:14px;">
+      <button class="btn btn-primary" id="pwbtn">进入</button>
+    </div>
+  </div>
+</div>
+
+<main id="main" style="display:none;">
+  <h1 style="color:var(--green-900);font-size:26px;">EMCL Admin</h1>
+  <p class="sub" style="text-align:left;">Release 统计与公告发布 · 数据来自 GitHub API，下载统计不做服务端去重。</p>
+
+  <div class="panel">
+    <h2>Release 统计</h2>
+    <div id="stats">
+      <table>
+        <tr><th>最新版本</th><td id="st-latest">-</td></tr>
+        <tr><th>最新版下载量</th><td id="st-latest-dl">-</td></tr>
+        <tr><th>近期版本累计下载</th><td id="st-total-dl">-</td></tr>
+      </table>
+    </div>
+    <h2 style="margin-top:20px;">逐资产下载数</h2>
+    <table id="assets"><tr><th>资产</th><th>下载量</th></tr></table>
+  </div>
+
+  <div class="panel">
+    <h2>发布公告</h2>
+    <label>标题</label>
+    <input type="text" id="a-title">
+    <label>正文</label>
+    <textarea id="a-content"></textarea>
+    <div class="row" style="margin-top:12px;">
+      <label style="margin:0;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="a-enabled" checked> 启用（enabled）</label>
+    </div>
+    <label>GitHub PAT（可选，仅存内存，不落地）</label>
+    <input type="password" id="a-pat" placeholder="ghp_...">
+    <div class="row" style="margin-top:14px;">
+      <button class="btn btn-primary" id="pub-btn">发布公告</button>
+      <button class="btn btn-ghost" id="refresh-btn">刷新统计</button>
+    </div>
+    <p class="msg" id="pub-msg"></p>
+  </div>
+</main>
+
+<script>
+(function () {
+  var PASS = "1234";
+  var REPO = "ETQWFD/EMCL";
+  var gate = document.getElementById("gate");
+  var main = document.getElementById("main");
+  var pwmsg = document.getElementById("pwmsg");
+
+  function enter() {
+    if (document.getElementById("pw").value === PASS) {
+      sessionStorage.setItem("emcl_admin", "1");
+      gate.style.display = "none";
+      main.style.display = "block";
+      loadStats();
+    } else {
+      pwmsg.textContent = "口令错误";
+    }
+  }
+  document.getElementById("pwbtn").addEventListener("click", enter);
+  document.getElementById("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") enter(); });
+  if (sessionStorage.getItem("emcl_admin") === "1") { gate.style.display = "none"; main.style.display = "block"; loadStats(); }
+
+  function loadStats() {
+    fetch("https://api.github.com/repos/" + REPO + "/releases?per_page=20")
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        if (!Array.isArray(list)) throw new Error("bad response");
+        var latest = list.find(function (r) { return !r.draft; });
+        var total = 0;
+        var latestDl = 0;
+        var rows = "";
+        list.forEach(function (rel) {
+          var relDl = 0;
+          rel.assets.forEach(function (a) {
+            relDl += a.download_count;
+            rows += "<tr><td>" + a.name + "</td><td>" + a.download_count.toLocaleString() + "</td></tr>";
+          });
+          total += relDl;
+          if (rel === latest) latestDl = relDl;
+        });
+        document.getElementById("st-latest").textContent = latest ? latest.tag_name : "-";
+        document.getElementById("st-latest-dl").textContent = latestDl.toLocaleString();
+        document.getElementById("st-total-dl").textContent = total.toLocaleString();
+        document.getElementById("assets").innerHTML = "<tr><th>资产</th><th>下载量</th></tr>" + rows;
+      })
+      .catch(function (e) {
+        document.getElementById("st-latest").textContent = "获取失败：" + e.message;
+      });
+  }
+  document.getElementById("refresh-btn").addEventListener("click", loadStats);
+
+  document.getElementById("pub-btn").addEventListener("click", function () {
+    var title = document.getElementById("a-title").value.trim();
+    var content = document.getElementById("a-content").value.trim();
+    var enabled = document.getElementById("a-enabled").checked;
+    var pat = document.getElementById("a-pat").value.trim();
+    var msg = document.getElementById("pub-msg");
+    if (!title || !content) { msg.className = "msg err"; msg.textContent = "标题与正文不能为空"; return; }
+    if (!pat) { msg.className = "msg err"; msg.textContent = "请填写 GitHub PAT（仅本次请求使用，不保存）"; return; }
+    var path = "website/announce.json";
+    var api = "https://api.github.com/repos/" + REPO + "/contents/" + path;
+    msg.className = "msg"; msg.textContent = "正在获取 announce.json…";
+    fetch(api, { headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (meta) {
+        if (!meta.sha) throw new Error("读取 announce.json 失败：" + (meta.message || "unknown"));
+        var body = atob(meta.content.replace(/\s/g, ""));
+        var arr;
+        try { arr = JSON.parse(body); } catch (e) { arr = []; }
+        if (!Array.isArray(arr)) arr = [];
+        arr.push({ id: "announce-" + Date.now(), enabled: enabled, title: title, content: content, updated: new Date().toISOString() });
+        var payload = {
+          message: "Update announce.json",
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(arr, null, 2)))),
+          sha: meta.sha
+        };
+        return fetch(api, { method: "PUT", headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" }, body: JSON.stringify(payload) });
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res.content) {
+          msg.className = "msg ok";
+          msg.textContent = "已发布。GitHub Pages 约 1 分钟后生效。";
+          document.getElementById("a-title").value = "";
+          document.getElementById("a-content").value = "";
+        } else {
+          throw new Error(res.message || "发布失败");
+        }
+      })
+      .catch(function (e) { msg.className = "msg err"; msg.textContent = e.message; });
+  });
+})();
+</script>
+</body>
+</html>

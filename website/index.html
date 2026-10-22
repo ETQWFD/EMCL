@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMCL - Eternal Minecraft Launcher</title>
+<meta name="description" content="EMCL 是 fork 自 HMCL 的 GPL-3.0 开源 Minecraft 启动器，支持 Mojang / BMCLAPI 双源下载、微软正版登录、绿色主题与便携版。">
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <nav class="container">
+    <div class="brand"><img src="img/icon.png" alt="EMCL">EMCL</div>
+    <div class="links">
+      <a href="#download">下载</a>
+      <a href="docs.html">使用手册</a>
+      <a href="#features">特性</a>
+      <a href="#statement">责任声明</a>
+      <a href="https://github.com/ETQWFD/EMCL/issues">Issues</a>
+      <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&amp;k=b31JnHKqph3vMmCIhk2htihvcREH2F1t&amp;authKey=U8JJu2GFgtaIvRnov%2FhH7%2Bcq08hv8JM6q5GBdGBzF1yZXYTSGSbQP9O%2FIh%2BVqby9&amp;noverify=0&amp;group_code=1121514619">QQ 群</a>
+    </div>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="container">
+    <img class="logo" src="img/icon.png" alt="EMCL">
+    <h1>EMCL</h1>
+    <div class="ver">Eternal Minecraft Launcher · v1.0 · GPL-3.0</div>
+    <p class="slogan">当所有启动器失效时，我将作为备选。游戏不该停止运营，游戏是人类精神上的支撑柱。</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#download">立即下载</a>
+      <a class="btn btn-ghost" href="docs.html">阅读使用手册</a>
+    </div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="container">
+    <h2>特性</h2>
+    <p class="sub">保留 HMCL 的完整能力，换成 EMCL 的绿色。</p>
+    <div class="grid">
+      <div class="card"><h3>双源下载</h3><p>Mojang 官方源与 BMCLAPI 镜像自动切换，多线程、断点续传、失败源自动禁用。</p></div>
+      <div class="card"><h3>微软正版登录</h3><p>完整 OAuth 登录流程，离线与正版入口并存，客户端 ID 支持环境变量注入。</p></div>
+      <div class="card"><h3>公平启动保护</h3><p>启动前静态检查作弊客户端、作弊 Mod 与 JVM 注入参数，命中即拦截并记录。</p></div>
+      <div class="card"><h3>绿色主题</h3><p>默认绿色主题与 EMCL 图标，界面顶栏显示 EMCL。</p></div>
+      <div class="card"><h3>自动更新</h3><p>启动时比对 GitHub 最新提交，三态更新：立即更新、忽略此版本、以后再说。</p></div>
+      <div class="card"><h3>便携 EXE</h3><p>EMCL.exe 由 jpackage 自带精简 JRE，双击即用，无需安装 Java。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screenshots">
+  <div class="container">
+    <h2>界面预览</h2>
+    <p class="sub">真实 EMCL 运行截图。</p>
+    <div class="shots">
+      <div class="shot"><img src="img/shot-launch.png" alt="EMCL 启动页"><div class="cap">启动页</div></div>
+      <div class="shot"><img src="img/shot-download.png" alt="EMCL 下载页"><div class="cap">下载页</div></div>
+      <div class="shot"><img src="img/shot-about.png" alt="EMCL 关于与设置页"><div class="cap">关于与设置页</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="container">
+    <h2>下载</h2>
+    <p class="sub">发布在 GitHub Releases 的 continuous 标签，持续更新。</p>
+    <div class="dl-grid">
+      <div class="dl-card">
+        <div class="name">EMCL.jar</div>
+        <div class="desc">跨平台可执行 jar（含全部依赖）。需要 Java 17 或更高版本，<code>java -jar EMCL.jar</code> 直接运行。</div>
+        <div class="meta">Linux / macOS / Windows · 约 12 MB</div>
+        <a class="btn btn-primary" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL.jar">下载 EMCL.jar</a>
+      </div>
+      <div class="dl-card">
+        <div class="name">EMCL-windows-portable.zip</div>
+        <div class="desc">Windows 便携版，内含 jpackage 生成的 EMCL.exe 与精简 JRE，双击即用，无需安装 Java。</div>
+        <div class="meta">Windows x64 · 约 80–120 MB</div>
+        <a class="btn btn-primary" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL-windows-portable.zip">下载 Windows 便携版</a>
+      </div>
+      <div class="dl-card">
+        <div class="name">EMCLJavaSetup.exe（可选）</div>
+        <div class="desc">仅当你有 EMCL.jar 但没有 Java 时使用：静默安装 Temurin JRE 17，安装完成后自动清理。</div>
+        <div class="meta">Windows · 可选资产</div>
+        <a class="btn btn-ghost" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCLJavaSetup.exe">下载引导器</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="statement">
+  <div class="container">
+    <h2>责任与运营声明</h2>
+    <div class="statement">
+      <h3>EMCL 不运营 Minecraft，也不运营任何多人服务器。</h3>
+      <p>未成年人充值、服务器封禁、道具纠纷、支付退款、服务器管理规则等事务，请联系对应服主 / 服务器管理组 / 支付渠道 / Microsoft·Mojang 官方支持，均不属于启动器可处理范围。</p>
+      <p>本项目按 GPL-3.0 开源，按「现状」提供。EMCL 是 fork 自 HMCL（原作者 huanghongxun）的开源分支，保留上游署名，版权归 ETC Team。作者与开发者不对使用后果承担法律责任。</p>
+      <p>当所有启动器失效时，我将作为备选——游戏不该停止运营，游戏是人类精神上的支撑柱。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>© 2026 ETC Team · EMCL by ETC Team · 上游：HMCL by huanghongxun</div>
+    <div>GPL-3.0 · 源码：<a href="https://github.com/ETQWFD/EMCL">github.com/ETQWFD/EMCL</a> · 反馈：<a href="mailto:2416444244@qq.com">2416444244@qq.com</a></div>
+  </div>
+</footer>
+</body>
+</html>

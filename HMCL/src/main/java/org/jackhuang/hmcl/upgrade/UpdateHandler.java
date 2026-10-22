@@ -62,6 +62,17 @@ public final class UpdateHandler {
      * @return whether to exit
      */
     public static boolean processArguments(String[] args) {
+        // EMCL: self-delete the temporary update jar after relaunching with it.
+        for (String arg : args) {
+            if (arg != null && arg.startsWith("--emcl-self-delete=")) {
+                try {
+                    Files.deleteIfExists(Paths.get(arg.substring("--emcl-self-delete=".length())));
+                } catch (IOException ignored) {
+                    // Non-fatal.
+                }
+            }
+        }
+
         breakForceUpdateFeature();
 
         if (isNestedApplication()) {
@@ -307,7 +318,7 @@ public final class UpdateHandler {
     private static boolean isFirstLaunchAfterUpgrade() {
         Path currentPath = JarUtils.thisJarPath();
         if (currentPath != null) {
-            Path updated = Metadata.HMCL_USER_HOME.resolve("HMCL-" + Metadata.VERSION + ".jar");
+            Path updated = Metadata.EMCL_USER_HOME.resolve("HMCL-" + Metadata.VERSION + ".jar");
             if (currentPath.equals(updated.toAbsolutePath())) {
                 return true;
             }
@@ -316,7 +327,7 @@ public final class UpdateHandler {
     }
 
     private static void breakForceUpdateFeature() {
-        Path hmclVersionJson = Metadata.HMCL_USER_HOME.resolve("hmclver.json");
+        Path hmclVersionJson = Metadata.EMCL_USER_HOME.resolve("hmclver.json");
         if (Files.isRegularFile(hmclVersionJson)) {
             try {
                 Map<?, ?> content = new Gson().fromJson(Files.readString(hmclVersionJson), Map.class);

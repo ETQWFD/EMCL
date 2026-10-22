@@ -77,7 +77,7 @@ public final class TexturesLoader {
     }
 
     private static final ThreadPoolExecutor POOL = threadPool("TexturesDownload", true, 2, 10, TimeUnit.SECONDS);
-    private static final Path TEXTURES_DIR = Metadata.HMCL_USER_HOME.resolve("skins");
+    private static final Path TEXTURES_DIR = Metadata.EMCL_USER_HOME.resolve("skins");
 
     private static Path getTexturePath(Texture texture) {
         String url = texture.url();

@@ -29,12 +29,12 @@ val projectConfig = PropertiesUtils.load(rootProject.file("config/project.proper
 val isOfficial = JenkinsUtils.IS_ON_CI || GitHubActionUtils.IS_ON_OFFICIAL_REPO
 
 val versionType = System.getenv("VERSION_TYPE") ?: if (isOfficial) "nightly" else "unofficial"
-val versionRoot = System.getenv("VERSION_ROOT") ?: projectConfig.getProperty("versionRoot") ?: "3"
+val versionRoot = System.getenv("VERSION_ROOT") ?: projectConfig.getProperty("versionRoot") ?: "1"
 
 val microsoftAuthId = System.getenv("MICROSOFT_AUTH_ID") ?: ""
 val curseForgeApiKey = System.getenv("CURSEFORGE_API_KEY") ?: ""
 
-val launcherExe = System.getenv("HMCL_LAUNCHER_EXE") ?: ""
+val launcherExe = System.getenv("EMCL_LAUNCHER_EXE") ?: ""
 
 val buildNumber = System.getenv("BUILD_NUMBER")?.toInt()
 if (buildNumber != null) {
@@ -156,25 +156,25 @@ tasks.compileJava {
 }
 
 val hmclProperties = buildList {
-    add("hmcl.version" to project.version.toString())
+    add("emcl.version" to project.version.toString())
     add("hmcl.add-opens" to addOpens.joinToString(" "))
     System.getenv("GITHUB_SHA")?.let {
-        add("hmcl.version.hash" to it)
+        add("emcl.version.hash" to it)
     }
-    add("hmcl.version.type" to versionType)
-    add("hmcl.microsoft.auth.id" to microsoftAuthId)
+    add("emcl.version.type" to versionType)
+    add("emcl.microsoft.auth.id" to microsoftAuthId)
     add("hmcl.curseforge.apikey" to curseForgeApiKey)
     add("hmcl.authlib-injector.version" to libs.authlib.injector.get().version!!)
     add("hmcl.lwjgl-unsafe-agent.version" to libs.lwjgl.unsafe.agent.get().version!!)
 }
 
-val hmclPropertiesFile = layout.buildDirectory.file("hmcl.properties")
+val emclPropertiesFile = layout.buildDirectory.file("emcl.properties")
 val createPropertiesFile = tasks.register("createPropertiesFile") {
-    outputs.file(hmclPropertiesFile)
+    outputs.file(emclPropertiesFile)
     hmclProperties.forEach { (k, v) -> inputs.property(k, v) }
 
     doLast {
-        val targetFile = hmclPropertiesFile.get().asFile
+        val targetFile = emclPropertiesFile.get().asFile
         targetFile.parentFile.mkdir()
         targetFile.bufferedWriter().use {
             for ((k, v) in hmclProperties) {
@@ -215,7 +215,7 @@ tasks.shadowJar {
     }
 
     manifest.attributes(
-        "Created-By" to "Copyright(c) 2013-2025 huangyuhui.",
+        "Created-By" to "Copyright(c) 2026 ETC Team (fork of HMCL).",
         "Implementation-Version" to project.version.toString(),
         "Main-Class" to "org.jackhuang.hmcl.Main",
         "Multi-Release" to "true",
@@ -243,7 +243,7 @@ tasks.processResources {
     dependsOn(createLanguageList)
 
     into("assets/") {
-        from(hmclPropertiesFile)
+        from(emclPropertiesFile)
         from(embedResources)
     }
 

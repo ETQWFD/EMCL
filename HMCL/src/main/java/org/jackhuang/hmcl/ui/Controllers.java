@@ -595,13 +595,13 @@ public final class Controllers {
     }
 
     public static void onHyperlinkAction(String href) {
-        if (href.startsWith("hmcl://")) {
+        if (href.startsWith("emcl://")) {
             switch (href) {
-                case "hmcl://settings/feedback":
+                case "emcl://settings/feedback":
                     Controllers.getSettingsPage().showFeedback();
                     Controllers.navigate(Controllers.getSettingsPage());
                     break;
-                case "hmcl://game/launch":
+                case "emcl://game/launch":
                     var repository = GameDirectoryManager.getSelectedRepository();
                     Instances.launch(repository.getSelectedInstance(), LauncherHelper::setKeep);
                     break;

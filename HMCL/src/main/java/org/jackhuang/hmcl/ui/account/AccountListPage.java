@@ -54,13 +54,12 @@ public final class AccountListPage extends DecoratorAnimatedPage implements Deco
     static final BooleanProperty RESTRICTED = new SimpleBooleanProperty(true);
 
     static {
-        String property = System.getProperty("hmcl.offline.auth.restricted", "auto");
+        // EMCL: offline and licensed entries coexist by default. Offline login is
+        // available unless explicitly restricted via -Dhmcl.offline.auth.restricted=true.
+        String property = System.getProperty("hmcl.offline.auth.restricted", "false");
 
-        if ("false".equals(property)
-                || "auto".equals(property) && RegionUtils.isIsChinaMainlandMachine()
-                || SettingsManager.userSettings().enableOfflineAccountProperty().get())
-            RESTRICTED.set(false);
-        else
+        if ("true".equals(property)) {
+            // Explicitly restricted; honor the upstream opt-in setting to unlock it.
             userSettings().enableOfflineAccountProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
                 public void changed(ObservableValue<? extends Boolean> o, Boolean oldValue, Boolean newValue) {
@@ -70,6 +69,9 @@ public final class AccountListPage extends DecoratorAnimatedPage implements Deco
                     }
                 }
             });
+        } else {
+            RESTRICTED.set(false);
+        }
     }
 
     private final ObservableList<AccountListItem> items;

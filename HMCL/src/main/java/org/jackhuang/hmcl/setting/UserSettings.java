@@ -120,6 +120,34 @@ public final class UserSettings extends ObservableSetting implements JsonSchemaS
         return logRetention;
     }
 
+    /// EMCL: the id of the latest announcement the user has seen.
+    @SerializedName("emclAnnounceSeenId")
+    private final StringProperty emclAnnounceSeenId = new SimpleStringProperty();
+
+    /// Returns the EMCL announcement seen-id property.
+    public StringProperty emclAnnounceSeenIdProperty() {
+        return emclAnnounceSeenId;
+    }
+
+    /// Returns the id of the latest announcement the user has seen.
+    public String getEmclAnnounceSeenId() {
+        return emclAnnounceSeenId.get();
+    }
+
+    /// EMCL: an update version (remote commit sha) the user chose to ignore.
+    @SerializedName("emclUpdateIgnoreVersion")
+    private final StringProperty emclUpdateIgnoreVersion = new SimpleStringProperty();
+
+    /// Returns the EMCL ignored-update-version property.
+    public StringProperty emclUpdateIgnoreVersionProperty() {
+        return emclUpdateIgnoreVersion;
+    }
+
+    /// Returns the update version the user chose to ignore.
+    public String getEmclUpdateIgnoreVersion() {
+        return emclUpdateIgnoreVersion.get();
+    }
+
     /// Whether offline accounts are enabled for this user.
     @SerializedName("enableOfflineAccount")
     private final BooleanProperty enableOfflineAccount = new SimpleBooleanProperty(false);

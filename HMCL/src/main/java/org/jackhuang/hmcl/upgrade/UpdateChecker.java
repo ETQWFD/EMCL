@@ -1,5 +1,8 @@
 /*
- * Hello Minecraft! Launcher
+ * EMCL (Eternal Minecraft Launcher)
+ * Copyright (C) 2026  ETC Team <2416444244@qq.com>
+ *
+ * Forked from Hello Minecraft! Launcher (HMCL)
  * Copyright (C) 2020  huangyuhui <huanghongxun2008@126.com> and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,45 +20,73 @@
  */
 package org.jackhuang.hmcl.upgrade;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import org.jackhuang.hmcl.Metadata;
+import org.jackhuang.hmcl.setting.SettingsManager;
+import org.jackhuang.hmcl.task.FileDownloadTask.IntegrityCheck;
+import org.jackhuang.hmcl.util.StringUtils;
+import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.io.NetworkUtils;
-import org.jackhuang.hmcl.util.versioning.VersionNumber;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 
 import static org.jackhuang.hmcl.setting.SettingsManager.settings;
-import static org.jackhuang.hmcl.util.Lang.*;
+import static org.jackhuang.hmcl.util.Lang.thread;
 import static org.jackhuang.hmcl.util.logging.Logger.LOG;
 
+/**
+ * EMCL update checker.
+ *
+ * <p>Instead of a version channel API, EMCL compares the local injected commit
+ * hash ({@code emcl.version.hash}, first 7 characters) with the latest commit
+ * sha of the {@code main} branch of the ETQWFD/EMCL repository. No prompt is
+ * shown when the local hash is missing, the network fails, the shas match, or
+ * the version was explicitly ignored by the user.
+ */
 public final class UpdateChecker {
     private UpdateChecker() {
     }
 
+    private static final String GITHUB_COMMITS_API = "https://api.github.com/repos/ETQWFD/EMCL/commits/main";
+
     private static final ObjectProperty<RemoteVersion> latestVersion = new SimpleObjectProperty<>();
-    private static final BooleanBinding outdated = Bindings.createBooleanBinding(
-            () -> {
-                RemoteVersion latest = latestVersion.get();
-                if (latest == null || isDevelopmentVersion(Metadata.VERSION)) {
-                    return false;
-                } else if (latest.force()
-                        || Metadata.isNightly()
-                        || latest.channel() == UpdateChannel.NIGHTLY
-                        || latest.channel() != UpdateChannel.getChannel()) {
-                    return !latest.version().equals(Metadata.VERSION);
-                } else {
-                    return VersionNumber.compare(Metadata.VERSION, latest.version()) < 0;
-                }
-            },
-            latestVersion);
+    private static final ReadOnlyStringWrapper latestCommitSha = new ReadOnlyStringWrapper();
     private static final ReadOnlyBooleanWrapper checkingUpdate = new ReadOnlyBooleanWrapper(false);
     private static final ReadOnlyObjectWrapper<@Nullable Throwable> error = new ReadOnlyObjectWrapper<>();
+
+    private static final BooleanBinding outdated = Bindings.createBooleanBinding(() -> {
+        String remote = latestCommitSha.get();
+        String local = Metadata.GITHUB_SHA;
+        if (StringUtils.isBlank(local) || StringUtils.isBlank(remote)) {
+            // No injected local hash or failed to fetch: do not prompt.
+            return false;
+        }
+        String l = local.toLowerCase();
+        String r = remote.toLowerCase();
+        // Treat as up-to-date when either sha is a prefix of the other
+        // (handles full-40 vs short-7 hashes in either direction).
+        if (r.equals(l) || r.startsWith(l) || l.startsWith(r)) {
+            return false;
+        }
+        String ignored = SettingsManager.userSettings().getEmclUpdateIgnoreVersion();
+        if (StringUtils.isNotBlank(ignored) && r.startsWith(ignored.toLowerCase())) {
+            return false;
+        }
+        return true;
+    }, latestCommitSha);
 
     public static void init() {
         requestCheckUpdate(UpdateChannel.getChannel(), settings().acceptPreviewUpdateProperty().get());
@@ -89,43 +120,42 @@ public final class UpdateChecker {
         return error.getReadOnlyProperty();
     }
 
-    private static RemoteVersion checkUpdate(UpdateChannel channel, boolean preview) throws IOException {
-        if (!IntegrityChecker.DISABLE_SELF_INTEGRITY_CHECK && !IntegrityChecker.isSelfVerified()) {
-            throw new SelfVerificationException();
+    /// Fetches the latest commit sha of ETQWFD/EMCL@main (synchronous).
+    public static RemoteVersion checkNow(UpdateChannel channel, boolean preview) throws IOException {
+        JsonObject response = JsonUtils.fromNonNullJson(NetworkUtils.doGet(GITHUB_COMMITS_API), JsonObject.class);
+        JsonElement shaElement = response.get("sha");
+        if (shaElement == null) {
+            throw new IOException("GitHub commits response is missing sha");
         }
-
-        var query = new LinkedHashMap<String, String>();
-        query.put("version", Metadata.VERSION);
-        query.put("channel", preview ? channel.channelName + "-preview" : channel.channelName);
-
-        String url = NetworkUtils.withQuery(Metadata.HMCL_UPDATE_URL, query);
-        return RemoteVersion.fetch(channel, preview, url);
-    }
-
-    private static boolean isDevelopmentVersion(String version) {
-        return version.contains("@") || // eg. @develop@
-                version.contains("SNAPSHOT"); // eg. 3.5.SNAPSHOT
+        String sha = shaElement.getAsString();
+        if (StringUtils.isBlank(sha)) {
+            throw new IOException("GitHub commits response has empty sha");
+        }
+        latestCommitSha.set(sha);
+        String shortSha = sha.length() >= 7 ? sha.substring(0, 7) : sha;
+        return new RemoteVersion(channel, shortSha, Metadata.DOWNLOAD_URL, RemoteVersion.Type.JAR, new IntegrityCheck("NONE", ""), preview, true);
     }
 
     public static void requestCheckUpdate(UpdateChannel channel, boolean preview) {
         Platform.runLater(() -> {
-            if (isCheckingUpdate())
+            if (isCheckingUpdate()) {
                 return;
+            }
             checkingUpdate.set(true);
 
             thread(() -> {
                 RemoteVersion result = null;
                 Throwable t = null;
                 try {
-                    result = checkUpdate(channel, preview);
-                    LOG.info("Latest version (" + channel + ", preview=" + preview + ") is " + result);
+                    result = checkNow(channel, preview);
+                    LOG.info("EMCL latest commit is " + result);
                 } catch (Throwable e) {
                     t = e;
                     LOG.warning("Failed to check for update", e);
                 }
                 Throwable throwable = t;
-
                 RemoteVersion finalResult = result;
+
                 Platform.runLater(() -> {
                     if (throwable != null) {
                         latestVersion.set(null);
@@ -135,6 +165,11 @@ public final class UpdateChecker {
                         latestVersion.set(finalResult);
                     }
                     checkingUpdate.set(false);
+
+                    // EMCL: auto-show the three-button update dialog on startup.
+                    if (throwable == null && finalResult != null && isOutdated()) {
+                        EMCLUpdateHandler.maybeShowUpdateDialog(finalResult);
+                    }
                 });
             }, "Update Checker", true);
         });

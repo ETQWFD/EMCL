@@ -1,0 +1,128 @@
+name: Build and Release EMCL
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: emcl-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      GITHUB_SHA: ${{ github.sha }}
+      MICROSOFT_AUTH_ID: ${{ secrets.CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Temurin JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build EMCL.jar (shadowJar)
+        run: ./gradlew :HMCL:shadowJar --no-daemon --stacktrace
+
+      - name: Stage EMCL.jar
+        shell: bash
+        run: |
+          mkdir -p staging/app
+          cp HMCL/build/libs/HMCL-*.jar staging/app/EMCL.jar
+          ls -lh staging/app/EMCL.jar
+
+      - name: Build portable Windows app-image with jpackage
+        shell: cmd
+        run: |
+          jpackage --type app-image --name EMCL --dest staging\image --input staging\app ^
+            --main-jar EMCL.jar --main-class org.jackhuang.hmcl.Main ^
+            --icon EMCL.ico --vendor "ETC Team" --app-version 1.0.0 ^
+            --java-options "-Demcl.packaged=true" ^
+            --java-options "--add-opens=java.base/java.lang=ALL-UNNAMED" ^
+            --java-options "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED" ^
+            --java-options "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.base/com.sun.javafx.binding=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.base/com.sun.javafx.event=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.base/com.sun.javafx.runtime=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.base/javafx.beans.property=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/javafx.css=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/javafx.stage=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/com.sun.glass.ui=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/com.sun.javafx.util=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/com.sun.prism=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.graphics/com.sun.javafx.tk.quantum=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.controls/javafx.scene.control=ALL-UNNAMED" ^
+            --java-options "--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED" ^
+            --java-options "--add-opens=jdk.attach/sun.tools.attach=ALL-UNNAMED"
+
+      - name: Package portable zip
+        shell: bash
+        run: |
+          cd staging/image
+          powershell -NoProfile -Command "Compress-Archive -Path EMCL -DestinationPath ../../EMCL-windows-portable.zip -Force"
+          cd ../..
+          ls -lh EMCL-windows-portable.zip
+
+      - name: Compile optional EMCLJavaSetup.exe
+        id: bootstrap
+        continue-on-error: true
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
+          cl /EHsc /O2 /D_UNICODE /DUNICODE installer\EMCLJavaSetup.cpp /Fe:EMCLJavaSetup.exe /link urlmon.lib
+          dir EMCLJavaSetup.exe
+
+      - name: Publish / update continuous Release (jar + portable zip)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: EMCL continuous
+          prerelease: true
+          make_latest: false
+          files: |
+            staging/app/EMCL.jar
+            EMCL-windows-portable.zip
+
+      - name: Attach optional EMCLJavaSetup.exe (best effort)
+        if: steps.bootstrap.outcome == 'success'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: EMCL continuous
+          prerelease: true
+          make_latest: false
+          files: EMCLJavaSetup.exe
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage website
+        run: |
+          mkdir -p _site
+          cp -r website/. _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

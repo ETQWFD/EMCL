@@ -13,19 +13,19 @@
     "lzh": "舊觀"
   },
   "description": {
-    "default": "Classic HMCL launcher themes",
-    "es": "Temas clásicos del launcher HMCL",
-    "ja": "HMCL ランチャーのクラシックテーマ",
-    "ru": "Классические темы лаунчера HMCL",
-    "uk": "Класичні теми лаунчера HMCL",
-    "zh-Hans": "HMCL 启动器经典主题",
-    "zh-Hant": "HMCL 啟動器經典主題",
-    "lzh": "HMCL 啟動器之舊觀"
+    "default": "Classic EMCL launcher themes",
+    "es": "Temas clásicos del launcher EMCL",
+    "ja": "EMCL ランチャーのクラシックテーマ",
+    "ru": "Классические темы лаунчера EMCL",
+    "uk": "Класичні теми лаунчера EMCL",
+    "zh-Hans": "EMCL 启动器经典主题",
+    "zh-Hant": "EMCL 啟動器經典主題",
+    "lzh": "EMCL 啟動器之舊觀"
   },
   "authors": [
     {
       "name": {
-        "default": "HMCL",
+        "default": "EMCL",
         "en-Qabs": "ꞀƆWH"
       }
     }
@@ -44,13 +44,13 @@
         "lzh": "今觀"
       },
       "description": {
-        "default": "HMCL current theme",
-        "es": "Tema actual de HMCL",
-        "ja": "HMCL の現在のテーマ",
+        "default": "EMCL current theme",
+        "es": "Tema actual de EMCL",
+        "ja": "EMCL の現在のテーマ",
         "ru": "Текущая тема HMCL",
         "uk": "Поточна тема HMCL",
-        "zh-Hans": "HMCL 当前主题",
-        "zh-Hant": "HMCL 當前主題",
+        "zh-Hans": "EMCL 当前主题",
+        "zh-Hant": "EMCL 當前主題",
         "lzh": "HMCL 之今觀"
       },
       "color": "#5C6BC0",
@@ -69,13 +69,13 @@
       "id": "2016-02-25",
       "name": "HMCL 3.3",
       "description": {
-        "default": "HMCL 3.3 classic appearance",
+        "default": "EMCL 3.3 classic appearance",
         "es": "Apariencia clásica de HMCL 3.3",
         "ja": "HMCL 3.3 のクラシックな外観",
         "ru": "Классический вид HMCL 3.3",
         "uk": "Класичний вигляд HMCL 3.3",
-        "zh-Hans": "HMCL 3.3 经典外观",
-        "zh-Hant": "HMCL 3.3 經典外觀",
+        "zh-Hans": "EMCL 3.3 经典外观",
+        "zh-Hant": "EMCL 3.3 經典外觀",
         "lzh": "HMCL 3.3 之舊觀"
       },
       "color": "#5C6BC0",

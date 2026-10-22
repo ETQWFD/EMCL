@@ -41,7 +41,7 @@ import java.util.Objects;
 @JsonSerializable
 public record ThemeColor(@NotNull String name, @NotNull Color color) {
 
-    public static final ThemeColor DEFAULT = new ThemeColor("blue", Color.web("#5C6BC0"));
+    public static final ThemeColor DEFAULT = new ThemeColor("green", Color.web("#4CAF50"));
 
     public static final List<ThemeColor> STANDARD_COLORS = List.of(
             DEFAULT,

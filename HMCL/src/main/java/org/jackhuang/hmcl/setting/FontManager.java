@@ -56,17 +56,17 @@ public final class FontManager {
 
         // Recommended
 
-        font = tryLoadLocalizedFont(Metadata.HMCL_LOCAL_HOME.resolve("font"));
+        font = tryLoadLocalizedFont(Metadata.EMCL_LOCAL_HOME.resolve("font"));
         if (font != null)
             return font;
 
-        font = tryLoadLocalizedFont(Metadata.HMCL_USER_HOME.resolve("font"));
+        font = tryLoadLocalizedFont(Metadata.EMCL_USER_HOME.resolve("font"));
         if (font != null)
             return font;
 
         // Legacy
 
-        font = tryLoadDefaultFont(Metadata.HMCL_LOCAL_HOME);
+        font = tryLoadDefaultFont(Metadata.EMCL_LOCAL_HOME);
         if (font != null)
             return font;
 
@@ -74,7 +74,7 @@ public final class FontManager {
         if (font != null)
             return font;
 
-        font = tryLoadDefaultFont(Metadata.HMCL_USER_HOME);
+        font = tryLoadDefaultFont(Metadata.EMCL_USER_HOME);
         if (font != null)
             return font;
 

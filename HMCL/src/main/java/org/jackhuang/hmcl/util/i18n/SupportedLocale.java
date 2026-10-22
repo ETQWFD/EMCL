@@ -93,15 +93,19 @@ public final class SupportedLocale {
         this.isDefault = true;
         this.name = "default";
 
-        String language = System.getenv("HMCL_LANGUAGE");
+        String language = System.getenv("EMCL_LANGUAGE");
         if (StringUtils.isBlank(language)) {
-            this.locale = LocaleUtils.SYSTEM_DEFAULT;
+            language = System.getenv("HMCL_LANGUAGE");
+        }
+        if (StringUtils.isBlank(language)) {
+            // EMCL default UI language is Simplified Chinese.
+            this.locale = Locale.SIMPLIFIED_CHINESE;
+            this.displayLocale = this.locale;
+        } else {
+            this.locale = Locale.forLanguageTag(language);
             this.displayLocale = isExperimentalSupported(this.locale)
                     ? Locale.ENGLISH
                     : this.locale;
-        } else {
-            this.locale = Locale.forLanguageTag(language);
-            this.displayLocale = this.locale;
         }
         this.textDirection = LocaleUtils.getTextDirection(locale);
     }
