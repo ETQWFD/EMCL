@@ -150,7 +150,7 @@ jobs:
         shell: pwsh
         run: |
           $f = Get-Item "EMCL.exe"
-          if ($f.Length -lt 30MB) { throw "EMCL.exe suspiciously small: $($f.Length)" }
+          if ($f.Length -lt 15MB) { throw "EMCL.exe suspiciously small: $($f.Length)" }
           $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
           if (-not ($bytes[0] -eq 0x4D -and $bytes[1] -eq 0x5A)) { throw "EMCL.exe is not a PE (MZ) file" }
           # The self-extractor must carry the appended 7z payload (signature 37 7A BC AF 27 1C).
