@@ -131,16 +131,18 @@ jobs:
           if not exist "%SZ%\7z.exe" (echo 7z.exe not found & exit /b 1)
           set "SFMOD=sfxmod\7zS.sfx"
           if exist "%SFMOD%" goto havesfx
-          echo 7zS.sfx not bundled, fetching official 7-Zip extra package
-          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z2301-extra.7z
+          echo 7zS.sfx not bundled, fetching classic 7-Zip 9.20 extra package
+          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z920_extra.7z
           if errorlevel 1 exit /b 1
           "%SZ%\7z.exe" e -y extra.7z -osfxmod 7zS.sfx
           if errorlevel 1 exit /b 1
           :havesfx
           if not exist "%SFMOD%" (echo failed to obtain 7zS.sfx & exit /b 1)
           pushd staging\image
-          "%SZ%\7z.exe" a -t7z -mx=9 -bb0 ..\..\payload.7z EMCL
+          "%SZ%\7z.exe" a -t7z -mx=9 -m0=lzma2 -bb0 ..\..\payload.7z EMCL
           popd
+          "%SZ%\7z.exe" t payload.7z >nul
+          if errorlevel 1 (echo payload.7z integrity test failed & exit /b 1)
           copy /b "%SFMOD%" + installer\sfx_config.txt + payload.7z EMCL.exe
           dir EMCL.exe
 
@@ -149,11 +151,17 @@ jobs:
         run: |
           $f = Get-Item "EMCL.exe"
           if ($f.Length -lt 30MB) { throw "EMCL.exe suspiciously small: $($f.Length)" }
-          $fs = [System.IO.File]::OpenRead($f.FullName)
-          $b = New-Object byte[] 2
-          $null = $fs.Read($b, 0, 2); $fs.Dispose()
-          if (-not ($b[0] -eq 0x4D -and $b[1] -eq 0x5A)) { throw "EMCL.exe is not a PE (MZ) file" }
-          Write-Host ("EMCL.exe OK, bytes=" + $f.Length)
+          $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
+          if (-not ($bytes[0] -eq 0x4D -and $bytes[1] -eq 0x5A)) { throw "EMCL.exe is not a PE (MZ) file" }
+          # The self-extractor must carry the appended 7z payload (signature 37 7A BC AF 27 1C).
+          # The 9.20 SFX stub + config is well under 2 MB, so scan only the first 2 MB.
+          $limit = [Math]::Min(1MB, $bytes.Length - 6)
+          $found = -1
+          for ($i = 0; $i -lt $limit; $i++) {
+            if ($bytes[$i] -eq 0x37 -and $bytes[$i+1] -eq 0x7A -and $bytes[$i+2] -eq 0xBC -and $bytes[$i+3] -eq 0xAF -and $bytes[$i+4] -eq 0x27 -and $bytes[$i+5] -eq 0x1C) { $found = $i; break }
+          }
+          if ($found -lt 0) { throw "appended 7z payload signature not found in EMCL.exe" }
+          Write-Host ("EMCL.exe OK, bytes=" + $f.Length + " payloadAt=" + $found)
 
       - name: Compile optional EMCLJavaSetup.exe
         id: bootstrap
