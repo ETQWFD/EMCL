@@ -47,11 +47,12 @@ jobs:
         run: |
           set -e
           curl -fL --retry 3 -o fxjmods.zip "https://download2.gluonhq.com/openjfx/21.0.8/openjfx-21.0.8_windows-x64_bin-jmods.zip"
-          mkdir -p fxjmods
-          tar -xf fxjmods.zip -C fxjmods
+          powershell -NoProfile -Command "Expand-Archive -Force -Path 'fxjmods.zip' -DestinationPath 'fxjmods'"
           FXMODS="$(dirname "$(find fxjmods -name 'javafx.controls.jmod' | head -n1)")"
+          FXWIN="$(cygpath -w "$FXMODS")"
           echo "FXMODS=$FXMODS"
-          echo "FXMODS=$FXMODS" >> "$GITHUB_ENV"
+          echo "FXWIN=$FXWIN"
+          echo "FXWIN=$FXWIN" >> "$GITHUB_ENV"
           ls -1 "$FXMODS"
 
       - name: Build portable Windows app-image with jpackage
@@ -60,7 +61,7 @@ jobs:
           jpackage --type app-image --name EMCL --dest staging\image --input staging\app ^
             --main-jar EMCL.jar --main-class org.jackhuang.hmcl.Main ^
             --icon EMCL.ico --vendor "ETC Team" --app-version 1.0.0 ^
-            --module-path "%FXMODS%" ^
+            --module-path "%FXWIN%" ^
             --add-modules javafx.base,javafx.graphics,javafx.controls ^
             --java-options "-Demcl.packaged=true" ^
             --java-options "--add-opens=java.base/java.lang=ALL-UNNAMED" ^
