@@ -1,9 +1,9 @@
 [
   {
-    "id": "announce-1792763365392",
+    "id": "announce-emcl-v1.0-release",
     "enabled": true,
-    "title": "1",
-    "content": "1",
-    "updated": "2026-10-23T13:49:25.392Z"
+    "title": "EMCL v1.0 已发布",
+    "content": "EMCL v1.0 现已可用：支持 Mojang 官方源与 BMCLAPI 镜像双源下载（大陆自动优先镜像）、微软正版登录、陶瓦多人联机、绿色主题与单个 Windows EXE 便携版。当所有启动器失效时，EMCL 作为备选，让游戏继续运行。",
+    "updated": "2026-10-24T00:00:00.000Z"
   }
 ]

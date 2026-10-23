@@ -145,9 +145,12 @@ public final class Launcher extends Application {
 
                 RegionUtils.init();
                 UpdateChecker.init();
-                EMCLAnnouncementChecker.init();
 
                 primaryStage.show();
+
+                // Fetch the announcement only after the main window is shown, otherwise the
+                // modal may be created before the stage is ready and never become visible.
+                EMCLAnnouncementChecker.init();
             });
         } catch (Throwable e) {
             CRASH_REPORTER.uncaughtException(Thread.currentThread(), e);

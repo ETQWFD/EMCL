@@ -124,6 +124,29 @@ jobs:
           } finally { $z.Dispose() }
           Get-Item $zip | Select-Object Name,Length
 
+      - name: Build single-file self-extracting EMCL.exe
+        shell: cmd
+        run: |
+          set "SZ=%ProgramFiles%\7-Zip"
+          if not exist "%SZ%\7z.exe" (echo 7z.exe not found & exit /b 1)
+          if not exist "%SZ%\7zS.sfx" (echo 7zS.sfx not found & exit /b 1)
+          pushd staging\image
+          "%SZ%\7z.exe" a -t7z -mx=9 -bb0 ..\..\payload.7z EMCL
+          popd
+          copy /b "%SZ%\7zS.sfx" + installer\sfx_config.txt + payload.7z EMCL.exe
+          dir EMCL.exe
+
+      - name: Verify single-file EMCL.exe
+        shell: pwsh
+        run: |
+          $f = Get-Item "EMCL.exe"
+          if ($f.Length -lt 30MB) { throw "EMCL.exe suspiciously small: $($f.Length)" }
+          $fs = [System.IO.File]::OpenRead($f.FullName)
+          $b = New-Object byte[] 2
+          $null = $fs.Read($b, 0, 2); $fs.Dispose()
+          if (-not ($b[0] -eq 0x4D -and $b[1] -eq 0x5A)) { throw "EMCL.exe is not a PE (MZ) file" }
+          Write-Host ("EMCL.exe OK, bytes=" + $f.Length)
+
       - name: Compile optional EMCLJavaSetup.exe
         id: bootstrap
         continue-on-error: true
@@ -142,6 +165,7 @@ jobs:
           prerelease: true
           make_latest: false
           files: |
+            EMCL.exe
             staging/app/EMCL.jar
             EMCL-windows-portable.zip
 

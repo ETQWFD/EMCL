@@ -48,8 +48,10 @@ public final class HMCLDownloadProvider extends DownloadProvider {
     ) {
         if (RegionUtils.isIsChinaMainlandMachine()) {
             return switch (source) {
-                case DEFAULT, OFFICIAL -> DownloadCandidates.of(defaultUrl, bmclapiUrl);
-                case MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
+                // In China Mainland even the default source prefers BMCLAPI first so the
+                // version manifest is fetched through the mirror when piston-meta is slow/blocked.
+                case DEFAULT, MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
+                case OFFICIAL -> DownloadCandidates.of(defaultUrl, bmclapiUrl);
             };
         } else {
             return switch (source) {

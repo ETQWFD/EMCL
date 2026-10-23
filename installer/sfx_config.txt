@@ -1,0 +1,5 @@
+;!@Install@!UTF-8!
+Title="EMCL"
+RunProgram="EMCL\\EMCL.exe"
+GUIMode="2"
+;!@InstallEnd@!

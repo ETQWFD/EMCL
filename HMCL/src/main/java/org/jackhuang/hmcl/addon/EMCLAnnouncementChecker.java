@@ -51,6 +51,14 @@ public final class EMCLAnnouncementChecker {
 
     public static void init() {
         thread(() -> {
+            // Let the main window finish its first layout pass before showing a modal,
+            // otherwise the dialog can be opened too early and stay hidden behind it.
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                return;
+            }
             // Announcement is best-effort. Network failure, offline state, a captive
             // portal/HTML error page, or a non-array payload must never surface an error.
             String body;

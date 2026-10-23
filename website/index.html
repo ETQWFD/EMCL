@@ -48,7 +48,7 @@
       <div class="card"><h3>公平启动保护</h3><p>启动前静态检查作弊客户端、作弊 Mod 与 JVM 注入参数，命中即拦截并记录。</p></div>
       <div class="card"><h3>绿色主题</h3><p>默认绿色主题与 EMCL 图标，界面顶栏显示 EMCL。</p></div>
       <div class="card"><h3>自动更新</h3><p>启动时比对 GitHub 最新提交，三态更新：立即更新、忽略此版本、以后再说。</p></div>
-      <div class="card"><h3>便携 EXE</h3><p>EMCL.exe 由 jpackage 自带精简 JRE，双击即用，无需安装 Java。</p></div>
+      <div class="card"><h3>单文件 EXE</h3><p>Windows 版为单个 EMCL.exe，内置精简 JRE 与 JavaFX，双击即用，无需安装 Java。</p></div>
     </div>
   </div>
 </section>
@@ -71,22 +71,23 @@
     <p class="sub">发布在 GitHub Releases 的 continuous 标签，持续更新。</p>
     <div class="dl-grid">
       <div class="dl-card">
+        <div class="name">EMCL.exe（单个文件，推荐 Windows）</div>
+        <div class="desc">单个 EXE 文件，内置精简 JRE 与 JavaFX，<strong>双击即用、无需安装 Java</strong>。首次启动会静默自解压数秒，随后自动打开。</div>
+        <div class="meta">Windows x64 · 单文件便携版 · 约 50–60 MB</div>
+        <a class="btn btn-primary" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL.exe">下载 EMCL.exe</a>
+      </div>
+      <div class="dl-card">
         <div class="name">EMCL.jar</div>
         <div class="desc">跨平台可执行 jar（含全部依赖）。需要 Java 17 或更高版本，<code>java -jar EMCL.jar</code> 直接运行。</div>
         <div class="meta">Linux / macOS / Windows · 约 12 MB</div>
         <a class="btn btn-primary" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL.jar">下载 EMCL.jar</a>
       </div>
       <div class="dl-card">
-        <div class="name">EMCL-windows-portable.zip</div>
-        <div class="desc">Windows 便携版，内含 jpackage 生成的 EMCL.exe 与精简 JRE，双击即用，无需安装 Java。</div>
-        <div class="meta">Windows x64 · 约 80–120 MB</div>
-        <a class="btn btn-primary" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL-windows-portable.zip">下载 Windows 便携版</a>
-      </div>
-      <div class="dl-card">
-        <div class="name">EMCLJavaSetup.exe（可选）</div>
-        <div class="desc">仅当你有 EMCL.jar 但没有 Java 时使用：静默安装 Temurin JRE 17，安装完成后自动清理。</div>
-        <div class="meta">Windows · 可选资产</div>
-        <a class="btn btn-ghost" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCLJavaSetup.exe">下载引导器</a>
+        <div class="name">其他资产（可选）</div>
+        <div class="desc">免解压的 Windows 便携 zip（含 EMCL.exe 与 runtime 目录）；以及仅有 jar、没有 Java 时用的 JRE 静默安装引导器。</div>
+        <div class="meta">Windows · 高级用户</div>
+        <a class="btn btn-ghost" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCL-windows-portable.zip">下载便携 zip</a>
+        <a class="btn btn-ghost" href="https://github.com/ETQWFD/EMCL/releases/download/continuous/EMCLJavaSetup.exe" style="margin-top:8px;">下载 JRE 引导器</a>
       </div>
     </div>
   </div>
