@@ -65,7 +65,8 @@
       <label style="margin:0;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="a-enabled" checked> 启用（enabled）</label>
     </div>
     <label>GitHub PAT（可选，仅存内存，不落地）</label>
-    <input type="password" id="a-pat" placeholder="ghp_...">
+    <input type="password" id="a-pat" placeholder="ghp_...（classic 勾 repo；fine-grained 勾 Contents 读写）">
+    <p class="sub" style="text-align:left;font-size:12px;color:var(--muted);margin:6px 0 0;">留空时可看公开统计（受每小时 60 次限流）；发布公告必须填写具备仓库 Contents 写权限的令牌，令牌只用于本次请求，不写入任何存储。</p>
     <div class="row" style="margin-top:14px;">
       <button class="btn btn-primary" id="pub-btn">发布公告</button>
       <button class="btn btn-ghost" id="refresh-btn">刷新统计</button>
@@ -96,11 +97,24 @@
   document.getElementById("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") enter(); });
   if (sessionStorage.getItem("emcl_admin") === "1") { gate.style.display = "none"; main.style.display = "block"; loadStats(); }
 
+  function authHeaders(extra) {
+    var h = { "Accept": "application/vnd.github+json" };
+    var pat = document.getElementById("a-pat").value.trim();
+    if (pat) h["Authorization"] = "token " + pat;
+    if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
+    return h;
+  }
+
   function loadStats() {
-    fetch("https://api.github.com/repos/" + REPO + "/releases?per_page=20")
-      .then(function (r) { return r.json(); })
+    document.getElementById("st-latest").textContent = "加载中…";
+    fetch("https://api.github.com/repos/" + REPO + "/releases?per_page=20", { headers: authHeaders() })
+      .then(function (r) {
+        if (r.status === 403 || r.status === 429) throw new Error("GitHub 未认证请求限流（每小时 60 次）。在下方填入 PAT 后点「刷新统计」即可（额度升至 5000/小时）。");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
       .then(function (list) {
-        if (!Array.isArray(list)) throw new Error("bad response");
+        if (!Array.isArray(list)) throw new Error((list && list.message) ? list.message : "响应不是数组");
         var latest = list.find(function (r) { return !r.draft; });
         var total = 0;
         var latestDl = 0;
@@ -136,11 +150,19 @@
     var path = "website/announce.json";
     var api = "https://api.github.com/repos/" + REPO + "/contents/" + path;
     msg.className = "msg"; msg.textContent = "正在获取 announce.json…";
-    fetch(api, { headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" } })
-      .then(function (r) { return r.json(); })
+    var H = { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" };
+    fetch(api, { headers: H })
+      .then(function (r) {
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) throw new Error("PAT 无效或权限不足：需要可写 Contents 的令牌（classic 勾选 repo；fine-grained 勾选 Contents Read/Write）。HTTP " + r.status);
+          if (r.status === 404) throw new Error("未找到 announce.json 或 PAT 无该仓库访问权限。HTTP 404");
+          throw new Error("读取失败 HTTP " + r.status);
+        }
+        return r.json();
+      })
       .then(function (meta) {
         if (!meta.sha) throw new Error("读取 announce.json 失败：" + (meta.message || "unknown"));
-        var body = atob(meta.content.replace(/\s/g, ""));
+        var body = decodeURIComponent(escape(atob(meta.content.replace(/\s/g, "").replace(/=+$/, ""))));
         var arr;
         try { arr = JSON.parse(body); } catch (e) { arr = []; }
         if (!Array.isArray(arr)) arr = [];
@@ -150,9 +172,16 @@
           content: btoa(unescape(encodeURIComponent(JSON.stringify(arr, null, 2)))),
           sha: meta.sha
         };
-        return fetch(api, { method: "PUT", headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" }, body: JSON.stringify(payload) });
+        return fetch(api, { method: "PUT", headers: H, body: JSON.stringify(payload) });
       })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) {
+          if (r.status === 409) throw new Error("announce.json 有新提交（冲突 409），请稍后重试。");
+          if (r.status === 403 || r.status === 401) throw new Error("PAT 没有写入 Contents 的权限。HTTP " + r.status);
+          return r.json().then(function (res) { throw new Error(res.message || ("发布失败 HTTP " + r.status)); });
+        }
+        return r.json();
+      })
       .then(function (res) {
         if (res.content) {
           msg.className = "msg ok";

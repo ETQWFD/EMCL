@@ -42,12 +42,26 @@ jobs:
           cp HMCL/build/libs/HMCL-*.jar staging/app/EMCL.jar
           ls -lh staging/app/EMCL.jar
 
+      - name: Download OpenJFX 21.0.8 Windows jmods
+        shell: bash
+        run: |
+          set -e
+          curl -fL --retry 3 -o fxjmods.zip "https://download2.gluonhq.com/openjfx/21.0.8/openjfx-21.0.8_windows-x64_bin-jmods.zip"
+          mkdir -p fxjmods
+          tar -xf fxjmods.zip -C fxjmods
+          FXMODS="$(dirname "$(find fxjmods -name 'javafx.controls.jmod' | head -n1)")"
+          echo "FXMODS=$FXMODS"
+          echo "FXMODS=$FXMODS" >> "$GITHUB_ENV"
+          ls -1 "$FXMODS"
+
       - name: Build portable Windows app-image with jpackage
         shell: cmd
         run: |
           jpackage --type app-image --name EMCL --dest staging\image --input staging\app ^
             --main-jar EMCL.jar --main-class org.jackhuang.hmcl.Main ^
             --icon EMCL.ico --vendor "ETC Team" --app-version 1.0.0 ^
+            --module-path "%FXMODS%" ^
+            --add-modules javafx.base,javafx.graphics,javafx.controls ^
             --java-options "-Demcl.packaged=true" ^
             --java-options "--add-opens=java.base/java.lang=ALL-UNNAMED" ^
             --java-options "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED" ^
@@ -70,12 +84,22 @@ jobs:
             --java-options "--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED" ^
             --java-options "--add-opens=jdk.attach/sun.tools.attach=ALL-UNNAMED"
 
-      - name: Package portable zip
+      - name: Package portable zip (POSIX separators)
         shell: bash
         run: |
-          cd staging/image
-          powershell -NoProfile -Command "Compress-Archive -Path EMCL -DestinationPath ../../EMCL-windows-portable.zip -Force"
-          cd ../..
+          set -e
+          echo "=== javafx must be linked into the runtime image ==="
+          grep -q 'javafx.graphics' staging/image/EMCL/runtime/release
+          grep -q 'javafx.controls' staging/image/EMCL/runtime/release
+          echo "javafx modules found in runtime/release"
+          rm -f EMCL-windows-portable.zip
+          powershell -NoProfile -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory('staging\image\EMCL','EMCL-windows-portable.zip')"
+          echo "=== zip entries (must use forward slashes) ==="
+          tar -tf EMCL-windows-portable.zip | head -20
+          if tar -tf EMCL-windows-portable.zip | grep -q '\\'; then echo "FATAL: backslash entries"; exit 1; fi
+          tar -tf EMCL-windows-portable.zip | grep -q '^EMCL/EMCL.exe$'
+          tar -tf EMCL-windows-portable.zip | grep -q '^EMCL/app/EMCL.jar$'
+          echo "zip layout OK"
           ls -lh EMCL-windows-portable.zip
 
       - name: Compile optional EMCLJavaSetup.exe
