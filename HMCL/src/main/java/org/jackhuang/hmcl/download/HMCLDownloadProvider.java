@@ -29,7 +29,6 @@ import org.jackhuang.hmcl.game.GameComponentType;
 import org.jackhuang.hmcl.game.HMCLCacheRepository;
 import org.jackhuang.hmcl.setting.DownloadSource;
 import org.jackhuang.hmcl.task.Task;
-import org.jackhuang.hmcl.util.RegionUtils;
 import org.jackhuang.hmcl.util.versioning.GameVersionNumber;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -46,19 +45,12 @@ public final class HMCLDownloadProvider extends DownloadProvider {
             DownloadSource source,
             WebURL defaultUrl, WebURL bmclapiUrl
     ) {
-        if (RegionUtils.isIsChinaMainlandMachine()) {
-            return switch (source) {
-                // In China Mainland even the default source prefers BMCLAPI first so the
-                // version manifest is fetched through the mirror when piston-meta is slow/blocked.
-                case DEFAULT, MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
-                case OFFICIAL -> DownloadCandidates.of(defaultUrl, bmclapiUrl);
-            };
-        } else {
-            return switch (source) {
-                case DEFAULT, OFFICIAL -> DownloadCandidates.of(defaultUrl);
-                case MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
-            };
-        }
+        // EMCL: no region detection. Default/Mirror prefer BMCLAPI (fast and reachable inside
+        // China Mainland) with the official URL as fallback; explicit Official reverses the order.
+        return switch (source) {
+            case DEFAULT, MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
+            case OFFICIAL -> DownloadCandidates.of(defaultUrl, bmclapiUrl);
+        };
     }
 
     private static DownloadCandidates getCandidates(DownloadSource source, List<MirrorRule> rules, List<String> urls) {
@@ -66,24 +58,13 @@ public final class HMCLDownloadProvider extends DownloadProvider {
             throw new IllegalArgumentException("urls cannot be empty");
         }
 
-        // true means prefer mirror, false means prefer official, null means do not use mirror
-        @Nullable Boolean mirrorFirst;
-        if (RegionUtils.isIsChinaMainlandMachine()) {
-            mirrorFirst = switch (source) {
-                case DEFAULT, MIRROR -> true;
-                case OFFICIAL -> false;
-            };
-        } else {
-            mirrorFirst = switch (source) {
-                case DEFAULT, OFFICIAL -> null;
-                case MIRROR -> true;
-            };
-        }
-
-        if (mirrorFirst == null) {
-            return DownloadCandidates.of(urls.stream().map(DownloadCandidate::of).toArray(DownloadCandidate[]::new));
-        }
-
+        // true means prefer mirror, false means prefer official.
+        // EMCL: always use mirrors (region-independent); Default/Mirror = mirror-first,
+        // explicit Official = official-first. Mirror rules already fall back to the original URL.
+        boolean mirrorFirst = switch (source) {
+            case DEFAULT, MIRROR -> true;
+            case OFFICIAL -> false;
+        };
         var candidates = new ArrayList<DownloadCandidate>(urls.size() * 2);
         for (String url : urls) {
             DownloadCandidate candidate = DownloadCandidate.of(url);
@@ -226,9 +207,10 @@ public final class HMCLDownloadProvider extends DownloadProvider {
 
     @Override
     public DownloadCandidates getCleanroomVersionListCandidates() {
-        return RegionUtils.isIsChinaMainlandMachine()
-                ? DownloadCandidates.of(CleanroomRemoteVersion.LOADER_LIST_URL, WebURL.parse("https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/cleanroom/index.json"))
-                : DownloadCandidates.of(CleanroomRemoteVersion.LOADER_LIST_URL);
+        // EMCL: region-independent; mirror first with official fallback.
+        return DownloadCandidates.of(
+                WebURL.parse("https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/cleanroom/index.json"),
+                CleanroomRemoteVersion.LOADER_LIST_URL);
     }
 
     @Override

@@ -24,7 +24,6 @@ import org.jackhuang.hmcl.task.FileDownloadTask;
 import org.jackhuang.hmcl.terracotta.provider.AbstractTerracottaProvider;
 import org.jackhuang.hmcl.terracotta.provider.GeneralProvider;
 import org.jackhuang.hmcl.terracotta.provider.MacOSProvider;
-import org.jackhuang.hmcl.util.RegionUtils;
 import org.jackhuang.hmcl.util.gson.JsonSerializable;
 import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.i18n.LocalizedText;
@@ -91,7 +90,9 @@ public final class TerracottaMetadata {
             }
 
             Stream<String> stream = downloads.stream(), streamCN = downloadsCN.stream();
-            @Unmodifiable List<WebURL> links = (RegionUtils.isIsChinaMainlandMachine() ? Stream.concat(streamCN, stream) : Stream.concat(stream, streamCN))
+            // EMCL: always try the CN mirrors first (fast everywhere, reachable inside China Mainland),
+            // then fall back to the official GitHub URLs.
+            @Unmodifiable List<WebURL> links = Stream.concat(streamCN, stream)
                     .map(link -> WebURL.parse(options.replace(link)))
                     .toList();
 

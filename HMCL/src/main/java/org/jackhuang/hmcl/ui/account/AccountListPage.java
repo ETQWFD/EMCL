@@ -40,7 +40,6 @@ import org.jackhuang.hmcl.ui.construct.AdvancedListItem;
 import org.jackhuang.hmcl.ui.construct.ClassTitle;
 import org.jackhuang.hmcl.ui.decorator.DecoratorAnimatedPage;
 import org.jackhuang.hmcl.ui.decorator.DecoratorPage;
-import org.jackhuang.hmcl.util.RegionUtils;
 import org.jackhuang.hmcl.util.javafx.BindingMapping;
 import org.jackhuang.hmcl.util.javafx.MappedObservableList;
 
