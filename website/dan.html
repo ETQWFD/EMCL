@@ -7,52 +7,33 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="img/icon.png">
 <link rel="stylesheet" href="css/style.css">
-<style>
-  main { max-width: 860px; margin: 40px auto; padding: 0 20px; }
-  .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 22px; box-shadow: var(--shadow); }
-  .panel h2 { font-size: 19px; color: var(--green-900); margin-bottom: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-  th { color: var(--muted); font-weight: 600; }
-  label { display: block; font-size: 14px; color: #334033; margin: 12px 0 4px; }
-  input[type=text], input[type=password], textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; font-family: inherit; }
-  textarea { min-height: 120px; }
-  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .msg { margin-top: 12px; font-size: 14px; }
-  .ok { color: var(--green-700); }
-  .err { color: #c62828; }
-  #gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99; }
-  #gate .box { width: 300px; }
-</style>
 </head>
 <body>
 <div id="gate">
-  <div class="box panel" style="text-align:center;">
+  <div class="box panel">
     <h2>EMCL Admin</h2>
     <label>口令</label>
     <input type="password" id="pw" autofocus>
     <p class="msg err" id="pwmsg"></p>
-    <div class="row" style="justify-content:center;margin-top:14px;">
+    <div class="row" style="justify-content:center;">
       <button class="btn btn-primary" id="pwbtn">进入</button>
     </div>
   </div>
 </div>
 
-<main id="main" style="display:none;">
-  <h1 style="color:var(--green-900);font-size:26px;">EMCL Admin</h1>
-  <p class="sub" style="text-align:left;">Release 统计与公告发布 · 数据来自 GitHub API，下载统计不做服务端去重。</p>
+<main class="admin" id="main" style="display:none;">
+  <h1 style="font-size:22px;margin-bottom:4px;">EMCL Admin</h1>
+  <p class="sub" style="text-align:left;margin-bottom:20px;">Release 统计与公告发布。数据来自 GitHub API，下载统计不做服务端去重。</p>
 
   <div class="panel">
     <h2>Release 统计</h2>
-    <div id="stats">
-      <table>
-        <tr><th>最新版本</th><td id="st-latest">-</td></tr>
-        <tr><th>最新版下载量</th><td id="st-latest-dl">-</td></tr>
-        <tr><th>近期版本累计下载</th><td id="st-total-dl">-</td></tr>
-      </table>
-    </div>
-    <h2 style="margin-top:20px;">逐资产下载数</h2>
-    <table id="assets"><tr><th>资产</th><th>下载量</th></tr></table>
+    <table class="t">
+      <tr><th>最新版本</th><td id="st-latest">-</td></tr>
+      <tr><th>最新版下载量</th><td id="st-latest-dl">-</td></tr>
+      <tr><th>近期版本累计下载</th><td id="st-total-dl">-</td></tr>
+    </table>
+    <h2 style="margin-top:18px;">逐资产下载数</h2>
+    <table class="t" id="assets"><tr><th>资产</th><th>下载量</th></tr></table>
   </div>
 
   <div class="panel">
@@ -61,13 +42,11 @@
     <input type="text" id="a-title">
     <label>正文</label>
     <textarea id="a-content"></textarea>
-    <div class="row" style="margin-top:12px;">
-      <label style="margin:0;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="a-enabled" checked> 启用（enabled）</label>
-    </div>
-    <label>GitHub PAT（可选，仅存内存，不落地）</label>
+    <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="a-enabled" checked> 启用</label>
+    <label>GitHub PAT（可选，仅存内存）</label>
     <input type="password" id="a-pat" placeholder="ghp_...（classic 勾 repo；fine-grained 勾 Contents 读写）">
-    <p class="sub" style="text-align:left;font-size:12px;color:var(--muted);margin:6px 0 0;">留空时可看公开统计（受每小时 60 次限流）；发布公告必须填写具备仓库 Contents 写权限的令牌，令牌只用于本次请求，不写入任何存储。</p>
-    <div class="row" style="margin-top:14px;">
+    <p class="hint">留空可查看公开统计（受每小时 60 次限流）；发布公告必须填写具备 Contents 写权限的令牌，令牌仅用于本次请求，不写入任何存储。</p>
+    <div class="row">
       <button class="btn btn-primary" id="pub-btn">发布公告</button>
       <button class="btn btn-ghost" id="refresh-btn">刷新统计</button>
     </div>
@@ -95,7 +74,11 @@
   }
   document.getElementById("pwbtn").addEventListener("click", enter);
   document.getElementById("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") enter(); });
-  if (sessionStorage.getItem("emcl_admin") === "1") { gate.style.display = "none"; main.style.display = "block"; loadStats(); }
+  if (sessionStorage.getItem("emcl_admin") === "1") {
+    gate.style.display = "none";
+    main.style.display = "block";
+    loadStats();
+  }
 
   function authHeaders(extra) {
     var h = { "Accept": "application/vnd.github+json" };
@@ -109,16 +92,14 @@
     document.getElementById("st-latest").textContent = "加载中…";
     fetch("https://api.github.com/repos/" + REPO + "/releases?per_page=20", { headers: authHeaders() })
       .then(function (r) {
-        if (r.status === 403 || r.status === 429) throw new Error("GitHub 未认证请求限流（每小时 60 次）。在下方填入 PAT 后点「刷新统计」即可（额度升至 5000/小时）。");
+        if (r.status === 403 || r.status === 429) throw new Error("GitHub 未认证请求限流（每小时 60 次）。在下方填入 PAT 后点刷新统计（额度升至 5000/小时）。");
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       })
       .then(function (list) {
         if (!Array.isArray(list)) throw new Error((list && list.message) ? list.message : "响应不是数组");
         var latest = list.find(function (r) { return !r.draft; });
-        var total = 0;
-        var latestDl = 0;
-        var rows = "";
+        var total = 0, latestDl = 0, rows = "";
         list.forEach(function (rel) {
           var relDl = 0;
           rel.assets.forEach(function (a) {
@@ -147,14 +128,13 @@
     var msg = document.getElementById("pub-msg");
     if (!title || !content) { msg.className = "msg err"; msg.textContent = "标题与正文不能为空"; return; }
     if (!pat) { msg.className = "msg err"; msg.textContent = "请填写 GitHub PAT（仅本次请求使用，不保存）"; return; }
-    var path = "website/announce.json";
-    var api = "https://api.github.com/repos/" + REPO + "/contents/" + path;
-    msg.className = "msg"; msg.textContent = "正在获取 announce.json…";
+    var api = "https://api.github.com/repos/" + REPO + "/contents/website/announce.json";
     var H = { "Authorization": "token " + pat, "Accept": "application/vnd.github+json" };
+    msg.className = "msg"; msg.textContent = "正在获取 announce.json…";
     fetch(api, { headers: H })
       .then(function (r) {
         if (!r.ok) {
-          if (r.status === 401 || r.status === 403) throw new Error("PAT 无效或权限不足：需要可写 Contents 的令牌（classic 勾选 repo；fine-grained 勾选 Contents Read/Write）。HTTP " + r.status);
+          if (r.status === 401 || r.status === 403) throw new Error("PAT 无效或权限不足：需要可写 Contents 的令牌。HTTP " + r.status);
           if (r.status === 404) throw new Error("未找到 announce.json 或 PAT 无该仓库访问权限。HTTP 404");
           throw new Error("读取失败 HTTP " + r.status);
         }
