@@ -67,6 +67,7 @@ public final class Metadata {
     public static final String GROUPS_URL = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=b31JnHKqph3vMmCIhk2htihvcREH2F1t&authKey=U8JJu2GFgtaIvRnov%2FhH7%2Bcq08hv8JM6q5GBdGBzF1yZXYTSGSbQP9O%2FIh%2BVqby9&noverify=0&group_code=1121514619";
     public static final String SPONSOR_URL = "https://b23.tv/o42pOXH";
     public static final String FEEDBACK_MAIL = "2416444244@qq.com";
+    public static final String AUTHOR_BILIBILI_URL = "https://space.bilibili.com/3546877758802076";
 
     public static final String BUILD_CHANNEL = JarUtils.getAttribute("emcl.version.type", "nightly");
     public static final String GITHUB_SHA = JarUtils.getAttribute("emcl.version.hash", null);

@@ -47,40 +47,87 @@ public final class GameRemoteVersion extends ComponentRemoteVersion {
     public static final WebURL VERSION_MANIFEST_URL = WebURL.parse("https://piston-meta.mojang.com/mc/game/version_manifest.json");
 
     public static Task<ComponentRemoteVersionList<GameRemoteVersion>> fetchAsync(DownloadProvider provider) {
-        return new GetTask(provider.getGameVersionListCandidates())
-                .thenApplyAsync(json -> {
-                    GameRemoteVersions root = JsonUtils.fromNonNullJson(json, GameRemoteVersions.class);
+        // EMCL: a mirror node may occasionally answer HTTP 200 with a truncated/invalid manifest.
+        // Treat any failure of the mirror-first fetch, including JSON parsing, as a trigger to
+        // retry the version list directly from the official source instead of showing an error.
+        Task<ComponentRemoteVersionList<GameRemoteVersion>> primary =
+                new GetTask(provider.getGameVersionListCandidates()).thenApplyAsync(GameRemoteVersion::parseManifest);
+        Task<ComponentRemoteVersionList<GameRemoteVersion>> official =
+                new GetTask(VERSION_MANIFEST_URL).thenApplyAsync(GameRemoteVersion::parseManifest);
+        return new OfficialFallbackTask(primary, official);
+    }
 
-                    GameRemoteVersions unlistedVersions = null;
+    private static ComponentRemoteVersionList<GameRemoteVersion> parseManifest(String json) {
+        GameRemoteVersions root = JsonUtils.fromNonNullJson(json, GameRemoteVersions.class);
 
-                    //noinspection DataFlowIssue
-                    try (Reader input = new InputStreamReader(
-                            GameRemoteVersion.class.getResourceAsStream("/assets/game/unlisted-versions.json"))) {
-                        unlistedVersions = JsonUtils.GSON.fromJson(input, GameRemoteVersions.class);
-                    } catch (Throwable e) {
-                        LOG.warning("Failed to load unlisted versions", e);
-                    }
+        GameRemoteVersions unlistedVersions = null;
 
-                    var versions = new TreeSet<GameRemoteVersion>();
+        //noinspection DataFlowIssue
+        try (Reader input = new InputStreamReader(
+                GameRemoteVersion.class.getResourceAsStream("/assets/game/unlisted-versions.json"))) {
+            unlistedVersions = JsonUtils.GSON.fromJson(input, GameRemoteVersions.class);
+        } catch (Throwable e) {
+            LOG.warning("Failed to load unlisted versions", e);
+        }
 
-                    if (unlistedVersions != null) {
-                        for (GameRemoteVersionInfo unlistedVersion : unlistedVersions.versions()) {
-                            versions.add(new GameRemoteVersion(
-                                    GameVersionNumber.asGameVersion(unlistedVersion.gameVersion()),
-                                    List.of(unlistedVersion.url()),
-                                    unlistedVersion.type(), unlistedVersion.releaseTime()));
-                        }
-                    }
+        var versions = new TreeSet<GameRemoteVersion>();
 
-                    for (GameRemoteVersionInfo remoteVersion : root.versions()) {
-                        versions.add(new GameRemoteVersion(
-                                GameVersionNumber.asGameVersion(remoteVersion.gameVersion()),
-                                List.of(remoteVersion.url()),
-                                remoteVersion.type(), remoteVersion.releaseTime()));
-                    }
+        if (unlistedVersions != null) {
+            for (GameRemoteVersionInfo unlistedVersion : unlistedVersions.versions()) {
+                versions.add(new GameRemoteVersion(
+                        GameVersionNumber.asGameVersion(unlistedVersion.gameVersion()),
+                        List.of(unlistedVersion.url()),
+                        unlistedVersion.type(), unlistedVersion.releaseTime()));
+            }
+        }
 
-                    return ComponentRemoteVersionList.of(GameComponentType.GAME, versions);
-                });
+        for (GameRemoteVersionInfo remoteVersion : root.versions()) {
+            versions.add(new GameRemoteVersion(
+                    GameVersionNumber.asGameVersion(remoteVersion.gameVersion()),
+                    List.of(remoteVersion.url()),
+                    remoteVersion.type(), remoteVersion.releaseTime()));
+        }
+
+        return ComponentRemoteVersionList.of(GameComponentType.GAME, versions);
+    }
+
+    @NotNullByDefault
+    private static final class OfficialFallbackTask extends Task<ComponentRemoteVersionList<GameRemoteVersion>> {
+        private final Task<? extends ComponentRemoteVersionList<GameRemoteVersion>> primary;
+        private final Task<? extends ComponentRemoteVersionList<GameRemoteVersion>> official;
+        private List<Task<?>> dependencies = List.of();
+
+        OfficialFallbackTask(Task<? extends ComponentRemoteVersionList<GameRemoteVersion>> primary,
+                            Task<? extends ComponentRemoteVersionList<GameRemoteVersion>> official) {
+            this.primary = primary;
+            this.official = official;
+        }
+
+        @Override
+        public java.util.Collection<? extends Task<?>> getDependents() {
+            return List.of(primary);
+        }
+
+        @Override
+        public boolean isRelyingOnDependents() {
+            return false;
+        }
+
+        @Override
+        public void execute() {
+            if (isDependentsSucceeded()) {
+                setResult(primary.getResult());
+            } else {
+                LOG.warning("Primary version list fetch failed, retrying from the official source.");
+                dependencies = List.of(official);
+                official.storeTo(this::setResult);
+            }
+        }
+
+        @Override
+        public List<Task<?>> getDependencies() {
+            return dependencies;
+        }
     }
 
     private final ReleaseType type;

@@ -83,3 +83,6 @@ language-subtag-registry
 /EMCL.jar
 /HMCL/build/libs/
 *.tmp
+
+# EMCL local runtime home
+/.EMCL/
