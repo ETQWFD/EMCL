@@ -125,11 +125,14 @@ public final class HMCLDownloadProvider extends DownloadProvider {
                 new MirrorRule("https://hmcl.glavo.site/metadata/fmllibs", "https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/fmllibs"),
                 new MirrorRule("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
 
-                // https://github.com/mcmod-info-mirror/mcim-rust-api
-                new MirrorRule("https://api.modrinth.com", "https://mod.mcimirror.top/modrinth", true),
-                new MirrorRule("https://cdn.modrinth.com", "https://mod.mcimirror.top", true),
-                new MirrorRule("https://api.curseforge.com", "https://mod.mcimirror.top/curseforge", true),
-                new MirrorRule("https://edge.forgecdn.net", "https://mod.mcimirror.top", true)
+                // EMCL: addon metadata/files are mirror-first. api.modrinth.com,
+                // api.curseforge.com and edge.forgecdn.net are often unreachable inside the
+                // Chinese Mainland; the mcim mirror is a full reverse proxy and is tried first,
+                // with the official endpoints kept only as a fallback.
+                new MirrorRule("https://api.modrinth.com", "https://mod.mcimirror.top/modrinth"),
+                new MirrorRule("https://cdn.modrinth.com", "https://mod.mcimirror.top"),
+                new MirrorRule("https://api.curseforge.com", "https://mod.mcimirror.top/curseforge"),
+                new MirrorRule("https://edge.forgecdn.net", "https://mod.mcimirror.top")
         );
     }
 
