@@ -63,7 +63,9 @@ public final class AboutPage extends SpinnerPane {
             launcher.setLargeTitle(true);
             launcher.setLeading(FXUtils.newBuiltinImage("/assets/img/icon.png"));
             launcher.setTitle("EMCL Launcher");
-            launcher.setSubtitle(Metadata.VERSION);
+            launcher.setSubtitle(Metadata.GITHUB_SHA == null
+                    ? Metadata.VERSION
+                    : Metadata.VERSION + " · " + Metadata.GITHUB_SHA.substring(0, Math.min(7, Metadata.GITHUB_SHA.length())));
 
             var etc = LineButton.createExternalLinkButton("https://github.com/ETQWFD");
             etc.setLargeTitle(true);
