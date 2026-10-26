@@ -131,11 +131,11 @@ jobs:
           if not exist "%SZ%\7z.exe" (echo 7z.exe not found & exit /b 1)
           set "SFMOD=sfxmod\7zS.sfx"
           if exist "%SFMOD%" goto havesfx
-          echo 7zS.sfx not bundled, fetching 7-Zip 24.10 extra package
+          echo 7zS.sfx not bundled, fetching 7-Zip 25.01 extra package
           rem The old 9.20 SFX stub cannot decompress lzma2 payloads (lzma2 was added in
           rem 7-Zip 9.30), which made the single-file EXE report "corrupt / cannot run".
-          rem Use the modern 24.10 stub that fully supports lzma2.
-          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z2410_extra.7z
+          rem Use the modern 25.01 stub that fully supports lzma2.
+          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z2501-extra.7z
           if errorlevel 1 exit /b 1
           "%SZ%\7z.exe" e -y extra.7z -osfxmod 7zS.sfx
           if errorlevel 1 exit /b 1
