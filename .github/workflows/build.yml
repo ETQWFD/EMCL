@@ -131,18 +131,18 @@ jobs:
           if not exist "%SZ%\7z.exe" (echo 7z.exe not found & exit /b 1)
           set "SFMOD=sfxmod\7zS.sfx"
           if exist "%SFMOD%" goto havesfx
-          echo 7zS.sfx not bundled, fetching 7-Zip 25.01 extra package
-          rem The old 9.20 SFX stub cannot decompress lzma2 payloads (lzma2 was added in
-          rem 7-Zip 9.30), which made the single-file EXE report "corrupt / cannot run".
-          rem Use the modern 25.01 stub that fully supports lzma2.
-          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z2501-extra.7z
+          echo 7zS.sfx not bundled, fetching classic 7-Zip 9.20 extra package
+          rem The 9.20 SFX stub supports only LZMA (lzma2 came in 7-Zip 9.30), so the
+          rem payload MUST be compressed with -m0=LZMA. Using lzma2 with this stub made
+          rem the single-file EXE fail to open / report "corrupt file" on the user's PC.
+          curl -fsSL -o extra.7z https://www.7-zip.org/a/7z920_extra.7z
           if errorlevel 1 exit /b 1
           "%SZ%\7z.exe" e -y extra.7z -osfxmod 7zS.sfx
           if errorlevel 1 exit /b 1
           :havesfx
           if not exist "%SFMOD%" (echo failed to obtain 7zS.sfx & exit /b 1)
           pushd staging\image
-          "%SZ%\7z.exe" a -t7z -mx=9 -m0=lzma2 -bb0 ..\..\payload.7z EMCL
+          "%SZ%\7z.exe" a -t7z -mx=9 -m0=LZMA -bb0 ..\..\payload.7z EMCL
           popd
           "%SZ%\7z.exe" t payload.7z >nul
           if errorlevel 1 (echo payload.7z integrity test failed & exit /b 1)
