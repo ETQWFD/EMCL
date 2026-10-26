@@ -89,3 +89,4 @@ language-subtag-registry
 /.cn-test/
 /.run-test/
 /.merge-test/
+/.shot/
