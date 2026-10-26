@@ -155,33 +155,19 @@ tasks.compileJava {
     options.compilerArgs.addAll(addOpens.map { "--add-exports=$it=ALL-UNNAMED" })
 }
 
-val hmclProperties = buildList {
-    add("emcl.version" to project.version.toString())
-    add("hmcl.add-opens" to addOpens.joinToString(" "))
-    System.getenv("GITHUB_SHA")?.let {
-        add("emcl.version.hash" to it)
-    }
-    add("emcl.version.type" to versionType)
-    add("emcl.microsoft.auth.id" to microsoftAuthId)
-    add("hmcl.curseforge.apikey" to curseForgeApiKey)
-    add("hmcl.authlib-injector.version" to libs.authlib.injector.get().version!!)
-    add("hmcl.lwjgl-unsafe-agent.version" to libs.lwjgl.unsafe.agent.get().version!!)
-}
+val createPropertiesFile = tasks.register<WriteProperties>("createPropertiesFile") {
+    destinationFile.set(layout.buildDirectory.file("emcl.properties"))
+    encoding = "UTF-8"
 
-val emclPropertiesFile = layout.buildDirectory.file("emcl.properties")
-val createPropertiesFile = tasks.register("createPropertiesFile") {
-    outputs.file(emclPropertiesFile)
-    hmclProperties.forEach { (k, v) -> inputs.property(k, v) }
-
-    doLast {
-        val targetFile = emclPropertiesFile.get().asFile
-        targetFile.parentFile.mkdir()
-        targetFile.bufferedWriter().use {
-            for ((k, v) in hmclProperties) {
-                it.write("$k=$v\n")
-            }
-        }
-    }
+    property("emcl.version", project.version.toString())
+    property("hmcl.add-opens", addOpens.joinToString(" "))
+    System.getenv("GITHUB_SHA")?.let { property("emcl.version.hash", it) }
+    property("emcl.version.type", versionType)
+    property("emcl.microsoft.auth.id", microsoftAuthId)
+    property("hmcl.curseforge.apikey", curseForgeApiKey)
+    property("hmcl.authlib-injector.version", libs.authlib.injector.get().version!!)
+    property("hmcl.lwjgl-unsafe-agent.version", libs.lwjgl.unsafe.agent.get().version!!)
+    property("emcl.official", "false")
 }
 
 tasks.jar {
@@ -237,13 +223,13 @@ tasks.shadowJar {
 }
 
 tasks.processResources {
-    dependsOn(createPropertiesFile)
     dependsOn(upsideDownTranslate)
     dependsOn(createLocaleNamesResourceBundle)
     dependsOn(createLanguageList)
+    dependsOn(createPropertiesFile)
 
     into("assets/") {
-        from(emclPropertiesFile)
+        from(createPropertiesFile.flatMap { it.destinationFile })
         from(embedResources)
     }
 

@@ -86,3 +86,6 @@ language-subtag-registry
 
 # EMCL local runtime home
 /.EMCL/
+/.cn-test/
+/.run-test/
+/.merge-test/

@@ -1,20 +1,5 @@
-/*
- * Hello Minecraft! Launcher
- * Copyright (C) 2026 huangyuhui <huanghongxun2008@126.com> and contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+// SPDX-FileCopyrightText: Copyright (C) 2026 The HMCL Authors
+// SPDX-License-Identifier: GPL-3.0-or-later WITH AdditionRef-HMCL
 package org.jackhuang.hmcl.download;
 
 import org.glavo.url.WebURL;
@@ -29,6 +14,7 @@ import org.jackhuang.hmcl.game.GameComponentType;
 import org.jackhuang.hmcl.game.HMCLCacheRepository;
 import org.jackhuang.hmcl.setting.DownloadSource;
 import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.util.RegionUtils;
 import org.jackhuang.hmcl.util.versioning.GameVersionNumber;
 import org.jetbrains.annotations.NotNullByDefault;
 import org.jetbrains.annotations.Nullable;
@@ -45,8 +31,8 @@ public final class HMCLDownloadProvider extends DownloadProvider {
             DownloadSource source,
             WebURL defaultUrl, WebURL bmclapiUrl
     ) {
-        // EMCL: no region detection. Default/Mirror prefer BMCLAPI (fast and reachable inside
-        // China Mainland) with the official URL as fallback; explicit Official reverses the order.
+        // EMCL: region-independent. Default/Mirror prefer BMCLAPI (reachable inside the
+        // Chinese Mainland) with the official URL as fallback; explicit Official reverses.
         return switch (source) {
             case DEFAULT, MIRROR -> DownloadCandidates.of(bmclapiUrl, defaultUrl);
             case OFFICIAL -> DownloadCandidates.of(defaultUrl, bmclapiUrl);
@@ -58,13 +44,15 @@ public final class HMCLDownloadProvider extends DownloadProvider {
             throw new IllegalArgumentException("urls cannot be empty");
         }
 
-        // true means prefer mirror, false means prefer official.
-        // EMCL: always use mirrors (region-independent); Default/Mirror = mirror-first,
-        // explicit Official = official-first. Mirror rules already fall back to the original URL.
+        // EMCL: region-independent, mirrors are always preferred. Default/Mirror try the
+        // mirror first (with the official URL as fallback); explicit Official keeps the
+        // official URL first. addon metadata/files (Modrinth/CurseForge) are unreachable
+        // inside the Chinese Mainland, so the mcim reverse proxy is tried first.
         boolean mirrorFirst = switch (source) {
             case DEFAULT, MIRROR -> true;
             case OFFICIAL -> false;
         };
+
         var candidates = new ArrayList<DownloadCandidate>(urls.size() * 2);
         for (String url : urls) {
             DownloadCandidate candidate = DownloadCandidate.of(url);
@@ -74,25 +62,18 @@ public final class HMCLDownloadProvider extends DownloadProvider {
                 continue;
             }
 
-            @Nullable DownloadCandidate mirrorCandidate = null;
-            boolean fallback = false;
+            boolean added = false;
             for (MirrorRule rule : rules) {
-                if (url.startsWith(rule.source)) {
-                    mirrorCandidate = DownloadCandidate.of(rule.target + url.substring(rule.source.length()));
-                    fallback = rule.fallback;
+                @Nullable List<DownloadCandidate> list = rule.getCandidates(candidate, mirrorFirst);
+                if (list != null) {
+                    candidates.addAll(list);
+                    added = true;
                     break;
                 }
             }
 
-            if (mirrorCandidate == null) {
+            if (!added)
                 candidates.add(candidate);
-            } else if (mirrorFirst && !fallback) {
-                candidates.add(mirrorCandidate);
-                candidates.add(candidate);
-            } else {
-                candidates.add(candidate);
-                candidates.add(mirrorCandidate);
-            }
         }
 
         return DownloadCandidates.of(List.copyOf(candidates));
@@ -104,35 +85,60 @@ public final class HMCLDownloadProvider extends DownloadProvider {
     public HMCLDownloadProvider(String bmclRoot) {
         this.bmclRoot = bmclRoot;
         this.rules = List.of(
-                new MirrorRule("https://bmclapi2.bangbang93.com", bmclRoot),
-                new MirrorRule("https://launchermeta.mojang.com", bmclRoot),
-                new MirrorRule("https://piston-meta.mojang.com", bmclRoot),
-                new MirrorRule("https://piston-data.mojang.com", bmclRoot),
-                new MirrorRule("https://launcher.mojang.com", bmclRoot),
-                new MirrorRule("https://libraries.minecraft.net", bmclRoot + "/libraries"),
-                new MirrorRule("http://files.minecraftforge.net/maven", bmclRoot + "/maven"),
-                new MirrorRule("https://files.minecraftforge.net/maven", bmclRoot + "/maven"),
-                new MirrorRule("https://maven.minecraftforge.net", bmclRoot + "/maven"),
-                new MirrorRule("https://maven.neoforged.net/releases/", bmclRoot + "/maven/"),
-                new MirrorRule("http://dl.liteloader.com/versions", bmclRoot + "/maven"),
-                new MirrorRule("https://dl.liteloader.com/versions", bmclRoot + "/maven"),
-                new MirrorRule("https://meta.fabricmc.net", bmclRoot + "/fabric-meta"),
-                new MirrorRule("https://maven.fabricmc.net", bmclRoot + "/maven"),
-                new MirrorRule("https://authlib-injector.yushi.moe", bmclRoot + "/mirrors/authlib-injector"),
-                new MirrorRule("https://repo1.maven.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public"),
-                new MirrorRule("https://repo.maven.apache.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public"),
-                new MirrorRule("https://hmcl.glavo.site/metadata/cleanroom", "https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/cleanroom"),
-                new MirrorRule("https://hmcl.glavo.site/metadata/fmllibs", "https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/fmllibs"),
-                new MirrorRule("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
+                new SimpleRule("https://bmclapi2.bangbang93.com", bmclRoot),
+                new SimpleRule("https://launchermeta.mojang.com", bmclRoot),
+                new SimpleRule("https://piston-meta.mojang.com", bmclRoot),
+                new SimpleRule("https://piston-data.mojang.com", bmclRoot),
+                new SimpleRule("https://launcher.mojang.com", bmclRoot),
+                new SimpleRule("https://libraries.minecraft.net", bmclRoot + "/libraries"),
+                new SimpleRule("http://files.minecraftforge.net/maven", bmclRoot + "/maven"),
+                new SimpleRule("https://files.minecraftforge.net/maven", bmclRoot + "/maven"),
+                new SimpleRule("https://maven.minecraftforge.net", bmclRoot + "/maven"),
+                (source, mirrorFirst) -> {
+                    String neoforgedMaven = "https://maven.neoforged.net/";
+                    String neoforgedMavenRelease = "https://maven.neoforged.net/releases/";
 
-                // EMCL: addon metadata/files are mirror-first. api.modrinth.com,
-                // api.curseforge.com and edge.forgecdn.net are often unreachable inside the
-                // Chinese Mainland; the mcim mirror is a full reverse proxy and is tried first,
-                // with the official endpoints kept only as a fallback.
-                new MirrorRule("https://api.modrinth.com", "https://mod.mcimirror.top/modrinth"),
-                new MirrorRule("https://cdn.modrinth.com", "https://mod.mcimirror.top"),
-                new MirrorRule("https://api.curseforge.com", "https://mod.mcimirror.top/curseforge"),
-                new MirrorRule("https://edge.forgecdn.net", "https://mod.mcimirror.top")
+                    if (source.url() == null || !source.url().href().startsWith(neoforgedMaven))
+                        return null;
+
+                    var candidates = new ArrayList<DownloadCandidate>();
+
+                    if (source.url().href().startsWith(neoforgedMavenRelease)) {
+                        DownloadCandidate bmclapiMirror = DownloadCandidate.of(bmclRoot + "/maven/"
+                                + source.url().href().substring(neoforgedMavenRelease.length()));
+
+                        if (mirrorFirst) {
+                            candidates.add(bmclapiMirror);
+                            candidates.add(source);
+                        } else {
+                            candidates.add(source);
+                            candidates.add(bmclapiMirror);
+                        }
+                    } else {
+                        candidates.add(source);
+                    }
+
+                    // https://neoforged.forgecdn.net
+                    candidates.add(DownloadCandidate.of("https://neoforged.forgecdn.net/" + source.url().href().substring(neoforgedMaven.length())));
+                    return candidates;
+                },
+                new SimpleRule("http://dl.liteloader.com/versions", bmclRoot + "/maven"),
+                new SimpleRule("https://dl.liteloader.com/versions", bmclRoot + "/maven"),
+                new SimpleRule("https://meta.fabricmc.net", bmclRoot + "/fabric-meta"),
+                new SimpleRule("https://maven.fabricmc.net", bmclRoot + "/maven"),
+                new SimpleRule("https://authlib-injector.yushi.moe", bmclRoot + "/mirrors/authlib-injector"),
+                new SimpleRule("https://repo1.maven.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public"),
+                new SimpleRule("https://repo.maven.apache.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public"),
+                new SimpleRule("https://hmcl.glavo.site/metadata/cleanroom", "https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/cleanroom"),
+                new SimpleRule("https://hmcl.glavo.site/metadata/fmllibs", "https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/fmllibs"),
+                new SimpleRule("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
+
+                // https://github.com/mcmod-info-mirror/mcim-rust-api
+                // EMCL: addon metadata/files are mirror-first (first=null keeps official as fallback).
+                new SimpleRule("https://api.modrinth.com", null, "https://mod.mcimirror.top/modrinth"),
+                new SimpleRule("https://cdn.modrinth.com", null, "https://mod.mcimirror.top"),
+                new SimpleRule("https://api.curseforge.com", null, "https://mod.mcimirror.top/curseforge"),
+                new SimpleRule("https://edge.forgecdn.net", null, "https://mod.mcimirror.top")
         );
     }
 
@@ -210,7 +216,7 @@ public final class HMCLDownloadProvider extends DownloadProvider {
 
     @Override
     public DownloadCandidates getCleanroomVersionListCandidates() {
-        // EMCL: region-independent; mirror first with official fallback.
+        // EMCL: mirror first with official fallback, region-independent.
         return DownloadCandidates.of(
                 WebURL.parse("https://alist.8mi.tech/d/mirror/HMCL-Metadata/Auto/cleanroom/index.json"),
                 CleanroomRemoteVersion.LOADER_LIST_URL);
@@ -274,9 +280,41 @@ public final class HMCLDownloadProvider extends DownloadProvider {
         }
     }
 
-    private record MirrorRule(String source, String target, boolean fallback) {
-        public MirrorRule(String source, String target) {
-            this(source, target, false);
+    @NotNullByDefault
+    @FunctionalInterface
+    private interface MirrorRule {
+        @Nullable List<DownloadCandidate> getCandidates(DownloadCandidate source, boolean mirrorFirst);
+    }
+
+    @NotNullByDefault
+    private record SimpleRule(String source, @Nullable String first, @Nullable String fallback) implements MirrorRule {
+        public SimpleRule(String source, String target) {
+            this(source, target, null);
+        }
+
+        @Override
+        public @Nullable List<DownloadCandidate> getCandidates(DownloadCandidate source, boolean mirrorFirst) {
+            if (source.url() == null || !source.url().href().startsWith(this.source))
+                return null;
+
+            boolean addSourceFirst = !mirrorFirst || first == null;
+            String urlWithoutPrefix = source.url().href().substring(this.source.length());
+
+            var candidates = new ArrayList<DownloadCandidate>();
+
+            if (addSourceFirst)
+                candidates.add(source);
+
+            if (first != null)
+                candidates.add(DownloadCandidate.of(first + urlWithoutPrefix));
+
+            if (!addSourceFirst)
+                candidates.add(source);
+
+            if (fallback != null)
+                candidates.add(DownloadCandidate.of(fallback + urlWithoutPrefix));
+
+            return candidates;
         }
     }
 }
